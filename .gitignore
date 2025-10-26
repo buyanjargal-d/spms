@@ -1,24 +1,52 @@
-# Compiled class file
-*.class
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
 
-# Log file
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+dist/
+build/
 *.log
+logs/
 
-# BlueJ files
-*.ctxt
+# OS
+.DS_Store
+Thumbs.db
+.DS_Store?
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# Test coverage
+coverage/
+.nyc_output/
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+# Secrets
+*.pem
+*.key
+secrets/
+*.token
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# Database
+*.sqlite
+*.db
+
+# Docker
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
