@@ -1,7 +1,7 @@
-import React from 'react';
+import { forwardRef } from 'react';
 import clsx from 'clsx';
 
-const Input = React.forwardRef(({
+const Input = forwardRef(({
   label,
   error,
   helperText,
