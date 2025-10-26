@@ -1,32 +1,58 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: student_pickup
-      POSTGRES_USER: devuser
-      POSTGRES_PASSWORD: devpass
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-  backend:
-    build: ./backend
+  # Backend API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: student-handover-api
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://devuser:devpass@postgres:5432/student_pickup
-      REDIS_URL: redis://redis:6379
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/logs:/app/logs
+    restart: unless-stopped
     depends_on:
-      - postgres
       - redis
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis cache (optional, for future use)
+  redis:
+    image: redis:7-alpine
+    container_name: student-handover-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - app-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
-  postgres_data:
+  redis-data:
+    driver: local

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Student Pickup Management System",
   "scripts": {
-    "test:db": "node scripts/test-db-connection.js"
+    "test:db": "node tests/test-db-connection.js"
   },
   "dependencies": {
     "pg": "^8.11.3",
