@@ -13,6 +13,7 @@ import ReportsPage from './pages/reports/ReportsPage';
 
 // Layout
 import DashboardLayout from './components/layout/DashboardLayout';
+import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -50,11 +51,50 @@ const AppRoutes = () => {
         }
       >
         <Route index element={<DashboardPage />} />
-        <Route path="students" element={<StudentsPage />} />
-        <Route path="students/:id" element={<StudentDetailPage />} />
-        <Route path="pickup-requests" element={<PickupRequestsPage />} />
-        <Route path="pickup-history" element={<PickupHistoryPage />} />
-        <Route path="reports" element={<ReportsPage />} />
+
+        {/* Admin only routes */}
+        <Route
+          path="students"
+          element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <StudentsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="students/:id"
+          element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <StudentDetailPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="reports"
+          element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <ReportsPage />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* Teacher and Admin routes */}
+        <Route
+          path="pickup-requests"
+          element={
+            <RoleProtectedRoute allowedRoles={['admin', 'teacher', 'guard']}>
+              <PickupRequestsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="pickup-history"
+          element={
+            <RoleProtectedRoute allowedRoles={['admin', 'teacher', 'parent', 'guard']}>
+              <PickupHistoryPage />
+            </RoleProtectedRoute>
+          }
+        />
       </Route>
 
       {/* Catch all - redirect to dashboard */}

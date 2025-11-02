@@ -1,5 +1,5 @@
 import api from './api';
-import * as SecureStore from 'expo-secure-store';
+import storage from '../utils/storage';
 
 export const authService = {
   // Login
@@ -7,17 +7,17 @@ export const authService = {
     try {
       const response = await api.post('/auth/login', credentials);
       const { token, user } = response.data;
-      
+
       // Store token and user data securely
-      await SecureStore.setItemAsync('userToken', token);
-      await SecureStore.setItemAsync('userData', JSON.stringify(user));
-      
+      await storage.setItem('userToken', token);
+      await storage.setItem('userData', JSON.stringify(user));
+
       return { success: true, user, token };
     } catch (error) {
       console.error('Login error:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Нэвтрэх үед алдаа гарлаа' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Нэвтрэх үед алдаа гарлаа'
       };
     }
   },
@@ -30,15 +30,16 @@ export const authService = {
       console.error('Logout error:', error);
     } finally {
       // Clear stored data
-      await SecureStore.deleteItemAsync('userToken');
-      await SecureStore.deleteItemAsync('userData');
+      await storage.deleteItem('userToken');
+      await storage.deleteItem('userData');
+      await storage.deleteItem('selectedStudent');
     }
   },
 
   // Get stored user data
   async getStoredUser() {
     try {
-      const userData = await SecureStore.getItemAsync('userData');
+      const userData = await storage.getItem('userData');
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
       console.error('Error getting stored user:', error);
@@ -49,7 +50,7 @@ export const authService = {
   // Get stored token
   async getStoredToken() {
     try {
-      return await SecureStore.getItemAsync('userToken');
+      return await storage.getItem('userToken');
     } catch (error) {
       console.error('Error getting stored token:', error);
       return null;

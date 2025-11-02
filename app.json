@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "f8f554a4-5dc7-4388-9505-7fbf16a4fd4d"
+      }
+    },
+    "android": {
+      "package": "com.bbka.spms"
+    }
+  }
+}

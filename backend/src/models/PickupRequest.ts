@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Student } from './Student';
 import { User } from './User';
+import { GuestPickupApproval } from './GuestPickupApproval';
 
 export enum RequestType {
   STANDARD = 'standard',
@@ -17,11 +19,12 @@ export enum RequestType {
 }
 
 export enum RequestStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
+  PENDING = 'pending', // Standard pickup pending teacher approval
+  PENDING_PARENT_APPROVAL = 'pending_parent_approval', // Guest pickup waiting for parent approval
+  APPROVED = 'approved', // Approved by teacher (or parent+teacher for guest)
+  REJECTED = 'rejected', // Rejected by teacher or parent
+  COMPLETED = 'completed', // Pickup completed
+  CANCELLED = 'cancelled', // Cancelled by requester
 }
 
 @Entity('pickup_requests')
@@ -116,4 +119,7 @@ export class PickupRequest {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'pickup_person_id' })
   pickupPerson?: User;
+
+  @OneToMany(() => GuestPickupApproval, (approval) => approval.pickupRequest)
+  guestApprovals?: GuestPickupApproval[];
 }

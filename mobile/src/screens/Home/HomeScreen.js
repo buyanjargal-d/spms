@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import storage from '../../utils/storage';
 import { useAuth } from '../../contexts/AuthContext';
 import { studentService } from '../../services/studentService';
 import { pickupService } from '../../services/pickupService';
@@ -19,24 +20,51 @@ const HomeScreen = ({ navigation }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [children, setChildren] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [allChildren, setAllChildren] = useState([]);
   const [recentRequests, setRecentRequests] = useState([]);
 
   useEffect(() => {
-    loadData();
+    loadSelectedStudent();
   }, []);
 
-  const loadData = async () => {
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadSelectedStudent();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  const loadSelectedStudent = async () => {
+    try {
+      const studentData = await storage.getItem('selectedStudent');
+      if (studentData) {
+        const student = JSON.parse(studentData);
+        setSelectedStudent(student);
+        loadData(student.id);
+      } else {
+        // No student selected, go back to selection
+        navigation.navigate('StudentSelection');
+      }
+    } catch (error) {
+      console.error('Load selected student error:', error);
+    }
+  };
+
+  const loadData = async (studentId) => {
     setLoading(true);
     try {
-      // Load children
+      // Load all children for quick access
       const childrenResult = await studentService.getMyChildren();
       if (childrenResult.success) {
-        setChildren(childrenResult.data || []);
+        setAllChildren(childrenResult.data || []);
       }
 
-      // Load recent requests
-      const requestsResult = await pickupService.getMyRequests({ limit: 5 });
+      // Load recent requests for selected student only
+      const requestsResult = await pickupService.getMyRequests({
+        studentId: studentId,
+        limit: 5
+      });
       if (requestsResult.success) {
         setRecentRequests(requestsResult.data || []);
       }
@@ -50,11 +78,19 @@ const HomeScreen = ({ navigation }) => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadData();
+    if (selectedStudent) {
+      loadData(selectedStudent.id);
+    }
   };
 
-  const handleQuickPickup = (child) => {
-    navigation.navigate('CreatePickup', { childId: child.id });
+  const handleQuickPickup = () => {
+    if (selectedStudent) {
+      navigation.navigate('CreatePickup', { childId: selectedStudent.id });
+    }
+  };
+
+  const handleSwitchStudent = () => {
+    navigation.navigate('StudentSelection');
   };
 
   const getStatusColor = (status) => {
@@ -88,20 +124,44 @@ const HomeScreen = ({ navigation }) => {
     >
       {/* Header */}
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerLeft}>
           <Text style={styles.greeting}>Сайн байна уу,</Text>
           <Text style={styles.userName}>{user?.fullName || 'Хэрэглэгч'}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.notificationButton}
-          onPress={() => navigation.navigate('Notifications')}
-        >
-          <Ionicons name="notifications-outline" size={24} color="#111827" />
-          <View style={styles.notificationBadge}>
-            <Text style={styles.notificationBadgeText}>3</Text>
-          </View>
-        </TouchableOpacity>
       </View>
+
+      {/* Selected Student Card */}
+      {selectedStudent && (
+        <Card style={styles.selectedStudentCard}>
+          <View style={styles.selectedStudentHeader}>
+            <View style={styles.selectedStudentInfo}>
+              <View style={styles.studentAvatar}>
+                <Text style={styles.studentAvatarText}>
+                  {selectedStudent.firstName?.charAt(0)}
+                </Text>
+              </View>
+              <View>
+                <Text style={styles.selectedStudentLabel}>Сонгогдсон хүүхэд</Text>
+                <Text style={styles.selectedStudentName}>
+                  {selectedStudent.firstName} {selectedStudent.lastName}
+                </Text>
+                <Text style={styles.selectedStudentClass}>
+                  {selectedStudent.class?.className || 'Анги тодорхойгүй'}
+                </Text>
+              </View>
+            </View>
+            {allChildren.length > 1 && (
+              <TouchableOpacity
+                style={styles.switchButton}
+                onPress={handleSwitchStudent}
+              >
+                <Ionicons name="swap-horizontal" size={20} color="#3b82f6" />
+                <Text style={styles.switchButtonText}>Солих</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </Card>
+      )}
 
       {/* Quick Action */}
       <Card style={styles.quickActionCard}>
@@ -118,41 +178,33 @@ const HomeScreen = ({ navigation }) => {
         />
       </Card>
 
-      {/* My Children */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Миний хүүхдүүд</Text>
-        {children.length === 0 ? (
-          <Card>
-            <Text style={styles.emptyText}>Хүүхдийн мэдээлэл байхгүй байна</Text>
-          </Card>
-        ) : (
-          children.map((child) => (
-            <Card key={child.id} style={styles.childCard}>
-              <View style={styles.childHeader}>
-                <View style={styles.childAvatar}>
-                  <Text style={styles.childAvatarText}>
-                    {child.firstName?.charAt(0)}
-                  </Text>
-                </View>
-                <View style={styles.childInfo}>
-                  <Text style={styles.childName}>
-                    {child.firstName} {child.lastName}
-                  </Text>
-                  <Text style={styles.childClass}>
-                    {child.class?.className || 'Анги тодорхойгүй'}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.pickupButton}
-                  onPress={() => handleQuickPickup(child)}
-                >
-                  <Ionicons name="car-outline" size={24} color="#3b82f6" />
-                </TouchableOpacity>
-              </View>
+      {/* Statistics */}
+      {selectedStudent && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Статистик</Text>
+          <View style={styles.statsContainer}>
+            <Card style={styles.statCard}>
+              <Ionicons name="time-outline" size={32} color="#3b82f6" />
+              <Text style={styles.statNumber}>{recentRequests.length}</Text>
+              <Text style={styles.statLabel}>Сүүлийн хүсэлт</Text>
             </Card>
-          ))
-        )}
-      </View>
+            <Card style={styles.statCard}>
+              <Ionicons name="checkmark-circle-outline" size={32} color="#10b981" />
+              <Text style={styles.statNumber}>
+                {recentRequests.filter(r => r.status === 'completed').length}
+              </Text>
+              <Text style={styles.statLabel}>Дууссан</Text>
+            </Card>
+            <Card style={styles.statCard}>
+              <Ionicons name="hourglass-outline" size={32} color="#f59e0b" />
+              <Text style={styles.statNumber}>
+                {recentRequests.filter(r => r.status === 'pending').length}
+              </Text>
+              <Text style={styles.statLabel}>Хүлээгдэж буй</Text>
+            </Card>
+          </View>
+        </View>
+      )}
 
       {/* Recent Requests */}
       <View style={styles.section}>
@@ -205,11 +257,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 24,
     paddingTop: 16,
+  },
+  headerLeft: {
+    flex: 1,
   },
   greeting: {
     fontSize: 16,
@@ -221,25 +273,63 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginTop: 4,
   },
-  notificationButton: {
-    position: 'relative',
-    padding: 8,
+  selectedStudentCard: {
+    marginHorizontal: 24,
+    marginBottom: 16,
+    backgroundColor: '#eff6ff',
   },
-  notificationBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+  selectedStudentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  selectedStudentInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  studentAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#dbeafe',
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 12,
   },
-  notificationBadgeText: {
-    color: '#ffffff',
-    fontSize: 12,
+  studentAvatarText: {
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#3b82f6',
+  },
+  selectedStudentLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  selectedStudentName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  selectedStudentClass: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  switchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    gap: 4,
+  },
+  switchButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3b82f6',
   },
   quickActionCard: {
     marginHorizontal: 24,
@@ -275,42 +365,26 @@ const styles = StyleSheet.create({
     color: '#3b82f6',
     fontWeight: '600',
   },
-  childCard: {
-    marginBottom: 12,
-  },
-  childHeader: {
+  statsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: 12,
   },
-  childAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#dbeafe',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  childAvatarText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#3b82f6',
-  },
-  childInfo: {
+  statCard: {
     flex: 1,
+    alignItems: 'center',
+    padding: 16,
   },
-  childName: {
-    fontSize: 16,
-    fontWeight: '600',
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#111827',
+    marginTop: 8,
+    marginBottom: 4,
   },
-  childClass: {
-    fontSize: 14,
+  statLabel: {
+    fontSize: 12,
     color: '#6b7280',
-    marginTop: 2,
-  },
-  pickupButton: {
-    padding: 8,
+    textAlign: 'center',
   },
   requestCard: {
     marginBottom: 12,

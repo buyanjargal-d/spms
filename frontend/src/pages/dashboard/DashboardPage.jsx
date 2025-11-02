@@ -1,43 +1,100 @@
 import { Users, ClipboardCheck, Clock, CheckCircle } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
+import { useAuth } from '../../contexts/AuthContext';
 
 const DashboardPage = () => {
+  const { user } = useAuth();
+
+  // Define role-specific stats
+  const getStatsByRole = () => {
+    const commonStats = [
+      {
+        name: 'Хүлээгдэж буй',
+        value: '8',
+        icon: Clock,
+        change: '+3',
+        changeType: 'increase',
+        color: 'bg-yellow-500',
+      },
+      {
+        name: 'Баталгаажсан',
+        value: '15',
+        icon: ClipboardCheck,
+        change: '+5',
+        changeType: 'increase',
+        color: 'bg-green-500',
+      },
+      {
+        name: 'Дууссан',
+        value: '132',
+        icon: CheckCircle,
+        change: '+18',
+        changeType: 'increase',
+        color: 'bg-purple-500',
+      },
+    ];
+
+    if (user?.role === 'admin') {
+      return [
+        {
+          name: 'Нийт сурагч',
+          value: '245',
+          icon: Users,
+          change: '+12',
+          changeType: 'increase',
+          color: 'bg-blue-500',
+        },
+        ...commonStats,
+      ];
+    } else if (user?.role === 'teacher') {
+      return [
+        {
+          name: 'Миний анги',
+          value: '28',
+          icon: Users,
+          change: '+0',
+          changeType: 'neutral',
+          color: 'bg-blue-500',
+        },
+        ...commonStats,
+      ];
+    } else if (user?.role === 'parent') {
+      return [
+        {
+          name: 'Миний хүүхдүүд',
+          value: '2',
+          icon: Users,
+          change: '+0',
+          changeType: 'neutral',
+          color: 'bg-blue-500',
+        },
+        {
+          name: 'Миний хүсэлтүүд',
+          value: '5',
+          icon: ClipboardCheck,
+          change: '+2',
+          changeType: 'increase',
+          color: 'bg-green-500',
+        },
+        {
+          name: 'Хүлээгдэж буй',
+          value: '1',
+          icon: Clock,
+          change: '+1',
+          changeType: 'increase',
+          color: 'bg-yellow-500',
+        },
+      ];
+    } else if (user?.role === 'guard') {
+      return commonStats;
+    }
+
+    return commonStats;
+  };
+
   // Mock data - Replace with real API calls
-  const stats = [
-    {
-      name: 'Нийт сурагч',
-      value: '245',
-      icon: Users,
-      change: '+12',
-      changeType: 'increase',
-      color: 'bg-blue-500',
-    },
-    {
-      name: 'Хүлээгдэж буй',
-      value: '8',
-      icon: Clock,
-      change: '+3',
-      changeType: 'increase',
-      color: 'bg-yellow-500',
-    },
-    {
-      name: 'Баталгаажсан',
-      value: '15',
-      icon: ClipboardCheck,
-      change: '+5',
-      changeType: 'increase',
-      color: 'bg-green-500',
-    },
-    {
-      name: 'Дууссан',
-      value: '132',
-      icon: CheckCircle,
-      change: '+18',
-      changeType: 'increase',
-      color: 'bg-purple-500',
-    },
-  ];
+  const stats = getStatsByRole();
 
   const recentPickups = [
     {

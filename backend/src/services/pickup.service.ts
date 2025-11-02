@@ -1,30 +1,50 @@
 import { Repository, Between, FindOptionsWhere } from 'typeorm';
-import { PickupRequest, RequestStatus } from '../models/PickupRequest';
+import { PickupRequest, RequestStatus, RequestType } from '../models/PickupRequest';
 import { AppDataSource } from '../config/database';
 import { CreatePickupRequestDTO, PickupRequestFilters } from '../types/pickup.types';
+import { GuestApprovalService } from './guestApproval.service';
 
 export class PickupService {
   private pickupRepository: Repository<PickupRequest>;
+  private guestApprovalService: GuestApprovalService;
 
   constructor() {
     this.pickupRepository = AppDataSource.getRepository(PickupRequest);
+    this.guestApprovalService = new GuestApprovalService();
   }
 
   /**
    * Create a new pickup request
+   * For guest pickups: creates approval records for parents and sets status to PENDING_PARENT_APPROVAL
+   * For standard pickups: sets status to PENDING (teacher approval)
    */
   async createPickupRequest(
     requesterId: string,
     data: CreatePickupRequestDTO
   ): Promise<PickupRequest> {
+    // Determine initial status based on request type
+    const initialStatus = data.requestType === RequestType.GUEST
+      ? RequestStatus.PENDING_PARENT_APPROVAL
+      : RequestStatus.PENDING;
+
     const pickupRequest = this.pickupRepository.create({
       ...data,
       requesterId,
       requestedTime: new Date(),
-      status: RequestStatus.PENDING,
+      status: initialStatus,
     });
 
-    return this.pickupRepository.save(pickupRequest);
+    const savedRequest = await this.pickupRepository.save(pickupRequest);
+
+    // If guest pickup, create approval records for all authorized parents
+    if (data.requestType === RequestType.GUEST) {
+      await this.guestApprovalService.createGuestApprovals(
+        savedRequest.id,
+        data.studentId
+      );
+    }
+
+    return savedRequest;
   }
 
   /**

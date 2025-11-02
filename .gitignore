@@ -52,3 +52,20 @@ tmp/
 temp/
 
 thesis_bb_report.pdf
+# Expo
+.expo/
+.expo-shared/
+
+# Node modules
+node_modules/
+
+# Native
+ios/
+android/
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

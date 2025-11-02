@@ -65,15 +65,18 @@ class App {
   private initializeRoutes(): void {
     const apiPrefix = ENV.API_PREFIX;
 
-    // Health check
-    this.app.get('/health', (_req: Request, res: Response) => {
+    // Health check - both root and API prefix
+    const healthCheck = (_req: Request, res: Response) => {
       res.json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
         environment: ENV.NODE_ENV,
         version: '1.0.0',
       });
-    });
+    };
+
+    this.app.get('/health', healthCheck);
+    this.app.get(`${apiPrefix}/health`, healthCheck);
 
     // API routes
     this.app.use(`${apiPrefix}/auth`, authRoutes);

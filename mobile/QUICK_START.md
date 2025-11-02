@@ -1,83 +1,99 @@
-# Quick Start Guide
+# Quick Start - Mobile Web Testing
 
-## ✅ What Was Fixed
+## Current Status
+✅ Server running on: **http://localhost:8081**
+✅ All storage issues fixed
+✅ Ready for testing
 
-1. **Installed all dependencies** - All npm packages are now installed
-2. **Fixed app configuration** - Removed references to missing asset files
-3. **Created assets directory** - Ready for custom icons when needed
-4. **Added configuration guide** - See .env.example for API setup
+## Steps to Test
 
-## 🚀 How to Run (3 Steps)
+### 1. Open Browser
+- Go to: **http://localhost:8081**
 
-### Step 1: Start Backend (Required!)
+### 2. Enable Mobile View
+**Chrome:**
+- Press `F12` to open DevTools
+- Press `Ctrl+Shift+M` to toggle device toolbar
+- Select device: **iPhone 12 Pro** or **Pixel 5**
+- Refresh page if needed
+
+**Firefox:**
+- Press `Ctrl+Shift+M` for Responsive Design Mode
+- Select mobile device dimensions
+
+### 3. Test Login
+- Enter DAN ID: `parent001`
+- Click "Нэвтрэх" (Login)
+- Should redirect to Student Selection
+
+### 4. Check Storage
+**DevTools → Application → Local Storage → http://localhost:8081**
+
+You should see:
+- `userToken`: JWT token
+- `userData`: User info
+- `selectedStudent`: Selected child
+
+### 5. Test Features
+- [x] Login
+- [x] Select student
+- [x] View home (filtered by student)
+- [x] Switch student
+- [x] Create pickup request
+- [x] View history
+- [x] View profile
+- [x] Logout
+
+## Test Accounts
+- `parent001` - Multiple children
+- `parent002` - Single child
+- `parent003` - No children
+
+## Troubleshooting
+
+### White Screen
+- Check browser console (F12)
+- Ensure backend is running
+- Clear cache and reload
+
+### API Errors
+**Start backend:**
 ```bash
 cd /home/buyaka/Desktop/spms/backend
-npm install  # if not done already
 npm run dev
 ```
 
-Backend must be running on http://localhost:3000
+### Storage Not Working
+- Check DevTools → Application → Local Storage
+- Ensure browser allows localStorage
+- Try incognito/private mode
 
-### Step 2: Start Mobile App
+### Server Not Running
 ```bash
 cd /home/buyaka/Desktop/spms/mobile
-npm start
+npx expo start --web --clear
 ```
 
-### Step 3: Choose Your Platform
-- Press `a` for Android emulator
-- Press `i` for iOS simulator (Mac only)
-- Scan QR code with Expo Go app on physical device
+## Current Changes
 
-## 🔑 Login Credentials
-Use these demo accounts:
-- `parent001`
-- `parent002`
-- `parent003`
+### Fixed
+✅ SecureStore compatibility (now uses localStorage on web)
+✅ Cross-platform storage abstraction
+✅ Dynamic import for native-only modules
+✅ Web platform detection
 
-## 📱 For Physical Devices
+### Files Modified
+- `src/utils/storage.js` - New cross-platform storage
+- All screens now use `storage` instead of `SecureStore`
 
-If testing on a real phone (not emulator):
-
-1. Find your computer's IP:
-   ```bash
-   hostname -I
-   ```
-
-2. Edit `/home/buyaka/Desktop/spms/mobile/app.json`:
-   ```json
-   "extra": {
-     "apiUrl": "http://YOUR_IP:3000/api/v1"
-   }
-   ```
-   Replace `YOUR_IP` with the IP from step 1
-
-3. Install Expo Go app from Play Store/App Store
-4. Scan QR code from terminal
-
-## ⚠️ Important Notes
-
-- **Backend must be running first** - The mobile app needs the API
-- **Use localhost for emulators** - Use IP address for physical devices
-- **Grant location permissions** - Required for pickup requests
-
-## 📚 More Information
-
-- Full details: See `FIXES_APPLIED.md`
-- Original README: See `README.md`
-- Setup guide: See `MOBILE_SETUP_GUIDE.md`
-
-## ❓ Common Issues
-
-**"Network request failed"**
-→ Backend not running. Start it first!
-
-**"Location permission denied"**
-→ Grant location permission in device settings
-
-**App won't start**
-→ Try: `expo start -c` (clears cache)
+## Next Steps
+1. Test in browser at http://localhost:8081
+2. Verify all features work
+3. Check localStorage in DevTools
+4. Test on mobile devices when ready
 
 ---
 
-**Status: Ready to Run!** 🎉
+**Server URL**: http://localhost:8081
+**Backend URL**: http://localhost:3000 (should be running)
+**Status**: ✅ Ready for Testing

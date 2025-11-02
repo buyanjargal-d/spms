@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -6,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../contexts/AuthContext';
 import LoginScreen from '../screens/Auth/LoginScreen';
+import StudentSelectionScreen from '../screens/Student/StudentSelectionScreen';
 import HomeScreen from '../screens/Home/HomeScreen';
 import CreatePickupScreen from '../screens/Pickup/CreatePickupScreen';
 import HistoryScreen from '../screens/History/HistoryScreen';
@@ -59,7 +61,12 @@ const Navigation = () => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return null; // Or a loading screen
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={styles.loadingText}>Ачааллаж байна...</Text>
+      </View>
+    );
   }
 
   return (
@@ -73,6 +80,14 @@ const Navigation = () => {
           />
         ) : (
           <>
+            <Stack.Screen
+              name="StudentSelection"
+              component={StudentSelectionScreen}
+              options={{
+                headerShown: false,
+                gestureEnabled: false,
+              }}
+            />
             <Stack.Screen
               name="Home"
               component={HomeTabs}
@@ -92,5 +107,19 @@ const Navigation = () => {
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+});
 
 export default Navigation;

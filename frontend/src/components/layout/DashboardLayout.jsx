@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { 
-  Home, 
-  Users, 
-  ClipboardList, 
-  History, 
-  BarChart3, 
-  Menu, 
-  X, 
+import {
+  Home,
+  Users,
+  ClipboardList,
+  History,
+  BarChart3,
+  Menu,
+  X,
   LogOut,
-  Bell
+  Bell,
+  CheckCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../common/Button';
@@ -18,13 +19,40 @@ const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
 
-  const navigation = [
-    { name: 'Хяналтын самбар', href: '/', icon: Home },
-    { name: 'Сурагчид', href: '/students', icon: Users },
-    { name: 'Авах хүсэлтүүд', href: '/pickup-requests', icon: ClipboardList },
-    { name: 'Түүх', href: '/pickup-history', icon: History },
-    { name: 'Тайлан', href: '/reports', icon: BarChart3 },
-  ];
+  // Define navigation based on user role
+  const getNavigationByRole = () => {
+    const baseNav = [
+      { name: 'Хяналтын самбар', href: '/', icon: Home, roles: ['admin', 'teacher', 'parent', 'guard'] },
+    ];
+
+    const roleSpecificNav = {
+      admin: [
+        { name: 'Сурагчид', href: '/students', icon: Users },
+        { name: 'Авах хүсэлтүүд', href: '/pickup-requests', icon: ClipboardList },
+        { name: 'Түүх', href: '/pickup-history', icon: History },
+        { name: 'Тайлан', href: '/reports', icon: BarChart3 },
+      ],
+      teacher: [
+        { name: 'Авах хүсэлтүүд', href: '/pickup-requests', icon: ClipboardList },
+        { name: 'Миний анги', href: '/my-class', icon: Users },
+        { name: 'Түүх', href: '/pickup-history', icon: History },
+      ],
+      parent: [
+        { name: 'Миний хүүхдүүд', href: '/my-children', icon: Users },
+        { name: 'Хүсэлт үүсгэх', href: '/create-pickup', icon: ClipboardList },
+        { name: 'Миний хүсэлтүүд', href: '/my-requests', icon: History },
+      ],
+      guard: [
+        { name: 'Авах хүсэлтүүд', href: '/pickup-requests', icon: ClipboardList },
+        { name: 'Баталгаажуулах', href: '/verify-pickup', icon: CheckCircle },
+        { name: 'Түүх', href: '/pickup-history', icon: History },
+      ],
+    };
+
+    return [...baseNav, ...(roleSpecificNav[user?.role] || roleSpecificNav.parent)];
+  };
+
+  const navigation = getNavigationByRole();
 
   const handleLogout = () => {
     logout();

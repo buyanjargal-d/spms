@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import storage from '../../utils/storage';
 import { studentService } from '../../services/studentService';
 import { pickupService } from '../../services/pickupService';
 import { locationService } from '../../services/locationService';
@@ -22,6 +23,12 @@ const CreatePickupScreen = ({ navigation, route }) => {
   const [location, setLocation] = useState(null);
   const [locationChecking, setLocationChecking] = useState(false);
   const [notes, setNotes] = useState('');
+  const [requestType, setRequestType] = useState('standard'); // 'standard' or 'guest'
+  const [guestInfo, setGuestInfo] = useState({
+    name: '',
+    phone: '',
+    idNumber: '',
+  });
 
   useEffect(() => {
     loadChildren();
@@ -32,11 +39,27 @@ const CreatePickupScreen = ({ navigation, route }) => {
     const result = await studentService.getMyChildren();
     if (result.success) {
       setChildren(result.data || []);
-      
+
       // Pre-select child if passed from previous screen
       if (route.params?.childId) {
         const child = result.data.find(c => c.id === route.params.childId);
-        if (child) setSelectedChild(child);
+        if (child) {
+          setSelectedChild(child);
+        }
+      } else {
+        // Try to load selected student from storage
+        try {
+          const studentData = await storage.getItem('selectedStudent');
+          if (studentData) {
+            const student = JSON.parse(studentData);
+            const child = result.data.find(c => c.id === student.id);
+            if (child) {
+              setSelectedChild(child);
+            }
+          }
+        } catch (error) {
+          console.error('Load selected student error:', error);
+        }
       }
     }
   };
@@ -82,30 +105,52 @@ const CreatePickupScreen = ({ navigation, route }) => {
       return;
     }
 
+    // Validate guest info if guest pickup
+    if (requestType === 'guest') {
+      if (!guestInfo.name.trim()) {
+        Alert.alert('Анхааруулга', 'Зочин хүний нэрийг оруулна уу');
+        return;
+      }
+      if (!guestInfo.phone.trim()) {
+        Alert.alert('Анхааруулга', 'Зочин хүний утасны дугаарыг оруулна уу');
+        return;
+      }
+      if (!guestInfo.idNumber.trim()) {
+        Alert.alert('Анхааруулга', 'Зочин хүний РД-г оруулна уу');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const data = {
         studentId: selectedChild.id,
-        requestType: 'standard',
+        requestType: requestType,
         scheduledPickupTime: new Date().toISOString(),
         requestLocationLat: location.latitude,
         requestLocationLng: location.longitude,
         notes: notes.trim(),
+        // Guest pickup fields
+        ...(requestType === 'guest' && {
+          guestName: guestInfo.name.trim(),
+          guestPhone: guestInfo.phone.trim(),
+          guestIdNumber: guestInfo.idNumber.trim(),
+        }),
       };
 
       const result = await pickupService.createRequest(data);
-      
+
       if (result.success) {
-        Alert.alert(
-          'Амжилттай',
-          'Хүсэлт амжилттай илгээгдлээ. Багш баталгаажуулна.',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('Home'),
-            },
-          ]
-        );
+        const message = requestType === 'guest'
+          ? 'Зочин хүний хүсэлт илгээгдлээ. Эцэг эх баталгаажуулна.'
+          : 'Хүсэлт амжилттай илгээгдлээ. Багш баталгаажуулна.';
+
+        Alert.alert('Амжилттай', message, [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Home'),
+          },
+        ]);
       } else {
         Alert.alert('Алдаа', result.error);
       }
@@ -119,6 +164,30 @@ const CreatePickupScreen = ({ navigation, route }) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
+        {/* Request Type Selection */}
+        <Card>
+          <Text style={styles.sectionTitle}>Хүсэлтийн төрөл</Text>
+          <View style={styles.requestTypeContainer}>
+            <Button
+              title="Энгийн"
+              onPress={() => setRequestType('standard')}
+              variant={requestType === 'standard' ? 'primary' : 'secondary'}
+              style={styles.requestTypeButton}
+            />
+            <Button
+              title="Зочин хүн"
+              onPress={() => setRequestType('guest')}
+              variant={requestType === 'guest' ? 'primary' : 'secondary'}
+              style={styles.requestTypeButton}
+            />
+          </View>
+          {requestType === 'guest' && (
+            <Text style={styles.guestInfoText}>
+              Зочин хүн хүүхдээ авах бол эцэг эхийн баталгаажуулалт шаардлагатай
+            </Text>
+          )}
+        </Card>
+
         {/* Location Status */}
         <Card>
           <View style={styles.locationHeader}>
@@ -170,6 +239,33 @@ const CreatePickupScreen = ({ navigation, route }) => {
             />
           ))}
         </Card>
+
+        {/* Guest Information */}
+        {requestType === 'guest' && (
+          <Card>
+            <Text style={styles.sectionTitle}>Зочин хүний мэдээлэл</Text>
+            <Input
+              label="Овог нэр"
+              placeholder="Жишээ: Б.Дорж"
+              value={guestInfo.name}
+              onChangeText={(text) => setGuestInfo({ ...guestInfo, name: text })}
+            />
+            <Input
+              label="Утасны дугаар"
+              placeholder="99119911"
+              value={guestInfo.phone}
+              onChangeText={(text) => setGuestInfo({ ...guestInfo, phone: text })}
+              keyboardType="phone-pad"
+            />
+            <Input
+              label="Регистрийн дугаар"
+              placeholder="УА12345678"
+              value={guestInfo.idNumber}
+              onChangeText={(text) => setGuestInfo({ ...guestInfo, idNumber: text })}
+              autoCapitalize="characters"
+            />
+          </Card>
+        )}
 
         {/* Notes */}
         <Card>
@@ -254,6 +350,19 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: 8,
     marginBottom: 32,
+  },
+  requestTypeContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  requestTypeButton: {
+    flex: 1,
+  },
+  guestInfoText: {
+    fontSize: 12,
+    color: '#f59e0b',
+    marginTop: 12,
+    fontStyle: 'italic',
   },
 });
 
