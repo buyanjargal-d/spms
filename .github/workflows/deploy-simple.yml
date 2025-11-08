@@ -22,12 +22,13 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           BRANCH_NAME: ${{ github.ref_name }}
           USERNAME: ${{ secrets.EC2_USERNAME }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT || 22 }}
-          envs: DATABASE_URL,JWT_SECRET,JWT_REFRESH_SECRET,SUPABASE_URL,SUPABASE_KEY,BRANCH_NAME,USERNAME
+          envs: DATABASE_URL,JWT_SECRET,JWT_REFRESH_SECRET,SUPABASE_URL,SUPABASE_KEY,BRANCH_NAME,USERNAME,EC2_HOST
           script: |
             set -e
 
@@ -70,8 +71,9 @@ jobs:
             echo "🧹 Cleaning up old images..."
             docker image prune -af --filter "until=72h"
 
-            # Build and start containers
+            # Build and start containers with frontend API URL
             echo "🔨 Building and starting containers..."
+            export VITE_API_URL="http://${EC2_HOST}:3000/api/v1"
             docker compose up -d --build
 
             # Wait for containers to be healthy
