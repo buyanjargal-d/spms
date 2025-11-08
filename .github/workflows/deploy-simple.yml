@@ -54,14 +54,14 @@ jobs:
             # Create .env file for backend (note: no quotes around EOF)
             echo "⚙️  Creating backend .env file..."
             cat > backend/.env << EOF
-NODE_ENV=production
-PORT=3000
-DATABASE_URL=${DATABASE_URL}
-JWT_SECRET=${JWT_SECRET}
-JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-SUPABASE_URL=${SUPABASE_URL}
-SUPABASE_KEY=${SUPABASE_KEY}
-EOF
+            NODE_ENV=production
+            PORT=3000
+            DATABASE_URL=${DATABASE_URL}
+            JWT_SECRET=${JWT_SECRET}
+            JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+            SUPABASE_URL=${SUPABASE_URL}
+            SUPABASE_KEY=${SUPABASE_KEY}
+            EOF
 
             # Stop existing containers
             echo "🛑 Stopping existing containers..."
