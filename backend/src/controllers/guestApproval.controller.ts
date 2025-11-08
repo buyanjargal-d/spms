@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { GuestApprovalService } from '../services/guestApproval.service';
 import { NotificationService } from '../services/notification.service';
-import { AuditService, AuditEntity } from '../services/audit.service';
+import { AuditService } from '../services/audit.service';
+import { AuditEntity } from '../models/AuditLog';
 import { PickupService } from '../services/pickup.service';
 import { logger } from '../utils/logger';
 
@@ -31,7 +32,7 @@ export const getPendingApprovals = async (req: Request, res: Response): Promise<
       return;
     }
 
-    const approvals = await guestApprovalService.getPendingApprovalsByParent(userId);
+    const approvals = await guestApprovalService.getPendingApprovalsForParent(userId);
 
     res.json({
       success: true,
@@ -64,16 +65,16 @@ export const approveGuest = async (req: Request, res: Response): Promise<void> =
     }
 
     // Approve the guest pickup
-    const approval = await guestApprovalService.approveGuestPickup(id, userId, notes);
+    const result = await guestApprovalService.approveGuestPickup(id, userId, notes);
 
-    if (!approval) {
+    if (!result) {
       res.status(404).json({ error: 'Approval request not found' });
       return;
     }
 
     // Get the pickup request
-    const pickupRequest = await pickupService.getPickupRequestById(
-      approval.pickupRequestId
+    const pickupRequest = result.pickupRequest || await pickupService.getPickupRequestById(
+      result.approval.pickupRequestId
     );
 
     if (!pickupRequest) {
@@ -84,7 +85,7 @@ export const approveGuest = async (req: Request, res: Response): Promise<void> =
     // Audit log
     await auditService.logApprove(
       AuditEntity.GUEST_APPROVAL,
-      approval.id,
+      result.approval.id,
       userId,
       {
         ipAddress: req.ip,
@@ -107,10 +108,10 @@ export const approveGuest = async (req: Request, res: Response): Promise<void> =
     }
 
     // 2. Check if pickup should move to teacher approval
-    const allApprovals = await guestApprovalService.getApprovalsByPickupRequest(
+    const allApprovals = await guestApprovalService.getApprovalsForRequest(
       pickupRequest.id
     );
-    const hasApproval = allApprovals.some((a) => a.status === 'approved');
+    const hasApproval = allApprovals.some((a: any) => a.status === 'approved');
 
     if (hasApproval) {
       // Move to teacher approval phase
@@ -123,7 +124,7 @@ export const approveGuest = async (req: Request, res: Response): Promise<void> =
 
     res.json({
       success: true,
-      data: approval,
+      data: result.approval,
       message: 'Guest pickup approved successfully',
     });
   } catch (error) {
@@ -169,16 +170,16 @@ export const rejectGuest = async (req: Request, res: Response): Promise<void> =>
     }
 
     // Reject the guest pickup
-    const approval = await guestApprovalService.rejectGuestPickup(id, userId, notes);
+    const result = await guestApprovalService.rejectGuestPickup(id, userId, notes);
 
-    if (!approval) {
+    if (!result) {
       res.status(404).json({ error: 'Approval request not found' });
       return;
     }
 
     // Get the pickup request
-    const pickupRequest = await pickupService.getPickupRequestById(
-      approval.pickupRequestId
+    const pickupRequest = result.pickupRequest || await pickupService.getPickupRequestById(
+      result.approval.pickupRequestId
     );
 
     if (!pickupRequest) {
@@ -189,7 +190,7 @@ export const rejectGuest = async (req: Request, res: Response): Promise<void> =>
     // Audit log
     await auditService.logReject(
       AuditEntity.GUEST_APPROVAL,
-      approval.id,
+      result.approval.id,
       userId,
       notes,
       {
@@ -218,7 +219,7 @@ export const rejectGuest = async (req: Request, res: Response): Promise<void> =>
 
     res.json({
       success: true,
-      data: approval,
+      data: result.approval,
       message: 'Guest pickup rejected',
     });
   } catch (error) {
@@ -250,7 +251,7 @@ export const getPickupApprovals = async (req: Request, res: Response): Promise<v
   try {
     const { pickupRequestId } = req.params;
 
-    const approvals = await guestApprovalService.getApprovalsByPickupRequest(
+    const approvals = await guestApprovalService.getApprovalsForRequest(
       pickupRequestId
     );
 
@@ -281,7 +282,7 @@ export const getMyApprovalRequests = async (req: Request, res: Response): Promis
       return;
     }
 
-    const approvals = await guestApprovalService.getApprovalsByParent(userId);
+    const approvals = await guestApprovalService.getPendingApprovalsForParent(userId);
 
     res.json({
       success: true,

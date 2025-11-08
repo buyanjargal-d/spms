@@ -134,7 +134,7 @@ export const auditSensitiveOperation = (
   action: string,
   entityType: string
 ) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     const user = (req as any).user;
 
     // Log before the operation
