@@ -20,24 +20,30 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT || 22 }}
           script: |
-            # Navigate to application directory
-            cd /home/${{ secrets.EC2_USERNAME }}/spms || {
-              echo "Creating spms directory..."
+            set -e
+
+            # Check if repository directory exists
+            if [ ! -d "/home/${{ secrets.EC2_USERNAME }}/spms/.git" ]; then
+              echo "📁 Repository not found. Cloning..."
+              rm -rf /home/${{ secrets.EC2_USERNAME }}/spms
               mkdir -p /home/${{ secrets.EC2_USERNAME }}/spms
               cd /home/${{ secrets.EC2_USERNAME }}/spms
-              git clone https://github.com/${{ github.repository }} .
-            }
+              git clone https://github.com/${{ github.repository }}.git .
+            else
+              echo "📁 Repository found. Updating..."
+              cd /home/${{ secrets.EC2_USERNAME }}/spms
+            fi
 
             # Pull latest changes
-            echo "Pulling latest code..."
+            echo "🔄 Pulling latest code from ${{ github.ref_name }}..."
             git fetch origin
             git checkout ${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
             git pull origin ${{ github.ref_name }}
 
-            # Create .env file for backend if it doesn't exist
-            if [ ! -f backend/.env ]; then
-              echo "Creating backend .env file..."
-              cat > backend/.env << 'EOF'
+            # Create .env file for backend
+            echo "⚙️  Creating backend .env file..."
+            cat > backend/.env << 'EOF'
             NODE_ENV=production
             PORT=3000
             DATABASE_URL=${{ secrets.DATABASE_URL }}
@@ -46,27 +52,30 @@ jobs:
             SUPABASE_URL=${{ secrets.SUPABASE_URL }}
             SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
             EOF
-            fi
 
             # Stop existing containers
-            echo "Stopping existing containers..."
-            docker-compose down
+            echo "🛑 Stopping existing containers..."
+            docker compose down 2>/dev/null || true
 
             # Remove old images to save space
-            echo "Cleaning up old images..."
+            echo "🧹 Cleaning up old images..."
             docker image prune -af --filter "until=72h"
 
             # Build and start containers
-            echo "Building and starting containers..."
-            docker-compose up -d --build
+            echo "🔨 Building and starting containers..."
+            docker compose up -d --build
+
+            # Wait for containers to be healthy
+            echo "⏳ Waiting for containers to start..."
+            sleep 10
 
             # Show running containers
-            echo "Deployment complete! Running containers:"
-            docker-compose ps
+            echo "✅ Deployment complete! Running containers:"
+            docker compose ps
 
-            # Show logs from last 50 lines
-            echo "Recent logs:"
-            docker-compose logs --tail=50
+            # Show logs from last 20 lines
+            echo "📋 Recent logs:"
+            docker compose logs --tail=20
 
       - name: Verify deployment
         run: |
