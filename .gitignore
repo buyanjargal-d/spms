@@ -71,3 +71,8 @@ android/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+plan/
+
+PROJECT_REQUIREMENTS_TODO.txt
+thesis_bb_report (1).pdf
