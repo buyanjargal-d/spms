@@ -1,0 +1,32 @@
+# Docker Compose override for CloudWatch logging
+# Usage: docker compose -f docker-compose.yml -f docker-compose.cloudwatch.yml up -d
+
+version: '3.8'
+
+services:
+  backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=backend,environment=production"
+        tag: "spms-backend"
+
+  frontend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=frontend,environment=production"
+        tag: "spms-frontend"
+
+  redis:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=redis,environment=production"
+        tag: "spms-redis"

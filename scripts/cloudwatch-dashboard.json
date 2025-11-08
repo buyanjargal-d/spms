@@ -1,0 +1,89 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "SPMS/Application", "CPU_IDLE", { "stat": "Average" } ],
+          [ ".", "CPU_IOWAIT", { "stat": "Average" } ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1",
+        "title": "CPU Metrics",
+        "yAxis": {
+          "left": {
+            "min": 0,
+            "max": 100
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "SPMS/Application", "MEM_USED", { "stat": "Average" } ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1",
+        "title": "Memory Usage",
+        "yAxis": {
+          "left": {
+            "min": 0,
+            "max": 100
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "SPMS/Application", "DISK_USED", { "stat": "Average" } ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1",
+        "title": "Disk Usage",
+        "yAxis": {
+          "left": {
+            "min": 0,
+            "max": 100
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [ "SPMS/Application", "TCP_ESTABLISHED", { "stat": "Average" } ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1",
+        "title": "Active TCP Connections"
+      }
+    },
+    {
+      "type": "log",
+      "properties": {
+        "query": "SOURCE '/aws/ec2/spms/backend'\n| fields @timestamp, @message\n| filter @message like /ERROR/\n| sort @timestamp desc\n| limit 20",
+        "region": "us-east-1",
+        "title": "Recent Backend Errors",
+        "stacked": false
+      }
+    },
+    {
+      "type": "log",
+      "properties": {
+        "query": "SOURCE '/aws/ec2/spms/backend'\n| fields @timestamp, @message\n| stats count() by bin(5m) as time\n| sort time desc\n| limit 20",
+        "region": "us-east-1",
+        "title": "Backend Log Volume",
+        "stacked": false
+      }
+    }
+  ]
+}
