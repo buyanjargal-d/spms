@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -27,28 +28,27 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await authService.login(credentials);
-      
-      // Mock login for development
-      const mockUser = {
-        id: '1',
-        danId: credentials.danId,
-        fullName: 'Багш Болд',
-        role: credentials.role || 'teacher',
-        email: 'teacher@spms.mn',
-      };
-      
-      const mockToken = 'mock-jwt-token-' + Date.now();
-      
-      localStorage.setItem('token', mockToken);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      
-      return { success: true, user: mockUser };
+      // Call real API
+      const response = await authService.login(credentials);
+
+      if (response.success && response.data) {
+        const { accessToken, user } = response.data;
+
+        // Store token and user data
+        localStorage.setItem('token', accessToken);
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
+
+        return { success: true, user };
+      } else {
+        return { success: false, error: response.message || 'Login failed' };
+      }
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Login failed'
+      };
     }
   };
 
