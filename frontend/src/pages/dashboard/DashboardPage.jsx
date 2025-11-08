@@ -106,7 +106,7 @@ const DashboardPage = () => {
         setLoading(true);
 
         // Fetch pickup requests
-        const pickupsResponse = await pickupService.getAllPickupRequests();
+        const pickupsResponse = await pickupService.getAllRequests();
         const pickups = pickupsResponse.data || pickupsResponse.pickupRequests || pickupsResponse || [];
 
         // Calculate real statistics

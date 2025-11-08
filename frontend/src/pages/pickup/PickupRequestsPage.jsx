@@ -13,7 +13,7 @@ const PickupRequestsPage = () => {
     const fetchPickupRequests = async () => {
       try {
         setLoading(true);
-        const response = await pickupService.getAllPickupRequests();
+        const response = await pickupService.getAllRequests();
         console.log('Pickup requests API response:', response);
 
         // Handle different response formats
