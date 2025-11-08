@@ -15,6 +15,7 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import studentRoutes from './routes/student.routes';
 import pickupRoutes from './routes/pickup.routes';
+import debugRoutes from './routes/debug.routes';
 
 class App {
   public app: Application;
@@ -83,6 +84,11 @@ class App {
     this.app.use(`${apiPrefix}/users`, userRoutes);
     this.app.use(`${apiPrefix}/students`, studentRoutes);
     this.app.use(`${apiPrefix}/pickup`, pickupRoutes);
+
+    // Debug routes (REMOVE IN PRODUCTION!)
+    if (ENV.isDevelopment() || ENV.NODE_ENV !== 'production') {
+      this.app.use(`${apiPrefix}/debug`, debugRoutes);
+    }
 
     // Root endpoint
     this.app.get('/', (_req: Request, res: Response) => {
