@@ -85,10 +85,9 @@ class App {
     this.app.use(`${apiPrefix}/students`, studentRoutes);
     this.app.use(`${apiPrefix}/pickup`, pickupRoutes);
 
-    // Debug routes (REMOVE IN PRODUCTION!)
-    if (ENV.isDevelopment() || ENV.NODE_ENV !== 'production') {
-      this.app.use(`${apiPrefix}/debug`, debugRoutes);
-    }
+    // Debug routes (TEMPORARY - REMOVE AFTER DEBUGGING!)
+    // Enabled temporarily to diagnose database issues
+    this.app.use(`${apiPrefix}/debug`, debugRoutes);
 
     // Root endpoint
     this.app.get('/', (_req: Request, res: Response) => {
