@@ -111,7 +111,7 @@ This script will:
 ```bash
 # Check agent status
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-  -a query -m ec2 -c default
+  -a status -m ec2
 
 # View agent logs
 sudo tail -f /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log

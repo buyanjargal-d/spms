@@ -153,7 +153,7 @@ docker compose up -d --build
 **Check agent status**:
 ```bash
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-  -a query -m ec2 -c default
+  -a status -m ec2
 ```
 
 **View agent logs**:
