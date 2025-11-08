@@ -1,14 +1,59 @@
+import { useState, useEffect } from 'react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { Plus, Search } from 'lucide-react';
+import { studentService } from '../../services/studentService';
+import toast from 'react-hot-toast';
 
 const StudentsPage = () => {
-  // Mock data
-  const students = [
-    { id: 1, code: 'STU2024001', name: 'Төмөр Баярын', grade: 5, class: '5-A' },
-    { id: 2, code: 'STU2024002', name: 'Сайхан Болдын', grade: 3, class: '3-B' },
-    { id: 3, code: 'STU2024003', name: 'Болор Дорж', grade: 5, class: '5-A' },
-  ];
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch students from API
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const response = await studentService.getAllStudents();
+        console.log('Students API response:', response);
+
+        // Handle different response formats
+        const studentsData = response.data || response.students || response;
+        setStudents(Array.isArray(studentsData) ? studentsData : []);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        toast.error('Сурагчдын мэдээлэл татахад алдаа гарлаа');
+        setStudents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  // Filter students based on search
+  const filteredStudents = students.filter(student => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      student.student_code?.toLowerCase().includes(searchLower) ||
+      student.first_name?.toLowerCase().includes(searchLower) ||
+      student.last_name?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="spinner mb-4"></div>
+          <p className="text-gray-600">Уншиж байна...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -31,50 +76,70 @@ const StudentsPage = () => {
               type="text"
               placeholder="Сурагч хайх..."
               className="input-field pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
-                  Код
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
-                  Нэр
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
-                  Анги
-                </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
-                  Үйлдэл
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.map((student) => (
-                <tr key={student.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4 text-sm text-gray-600">
-                    {student.code}
-                  </td>
-                  <td className="py-3 px-4 font-medium text-gray-900">
-                    {student.name}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-600">
-                    {student.class}
-                  </td>
-                  <td className="py-3 px-4">
-                    <Button variant="secondary" size="sm">
-                      Дэлгэрэнгүй
-                    </Button>
-                  </td>
+        {filteredStudents.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">
+              {students.length === 0 ? 'Сурагч олдсонгүй' : 'Хайлтаар сурагч олдсонгүй'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
+                    Код
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
+                    Нэр
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
+                    Анги
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
+                    Төлөв
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
+                    Үйлдэл
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredStudents.map((student) => (
+                  <tr key={student.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4 text-sm text-gray-600">
+                      {student.student_code}
+                    </td>
+                    <td className="py-3 px-4 font-medium text-gray-900">
+                      {student.last_name} {student.first_name}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600">
+                      {student.grade_level}-р анги
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        student.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {student.is_active ? 'Идэвхтэй' : 'Идэвхгүй'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Button variant="secondary" size="sm">
+                        Дэлгэрэнгүй
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
     </div>
   );

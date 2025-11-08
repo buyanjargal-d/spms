@@ -1,10 +1,16 @@
+import { useState, useEffect } from 'react';
 import { Users, ClipboardCheck, Clock, CheckCircle } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import { useAuth } from '../../contexts/AuthContext';
+import { pickupService } from '../../services/pickupService';
+import { studentService } from '../../services/studentService';
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState([]);
+  const [recentPickups, setRecentPickups] = useState([]);
 
   // Define role-specific stats
   const getStatsByRole = () => {
@@ -93,35 +99,98 @@ const DashboardPage = () => {
     return commonStats;
   };
 
-  // Mock data - Replace with real API calls
-  const stats = getStatsByRole();
+  // Fetch real data from API
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
 
-  const recentPickups = [
-    {
-      id: 1,
-      studentName: 'Төмөр Баярын',
-      guardianName: 'Баяр эцэг',
-      time: '14:30',
-      status: 'completed',
-      className: '5-A',
-    },
-    {
-      id: 2,
-      studentName: 'Сайхан Болдын',
-      guardianName: 'Болд эх',
-      time: '14:45',
-      status: 'pending',
-      className: '3-B',
-    },
-    {
-      id: 3,
-      studentName: 'Болор Дорж',
-      guardianName: 'Дорж эцэг',
-      time: '15:00',
-      status: 'approved',
-      className: '5-A',
-    },
-  ];
+        // Fetch pickup requests
+        const pickupsResponse = await pickupService.getAllPickupRequests();
+        const pickups = pickupsResponse.data || pickupsResponse.pickupRequests || pickupsResponse || [];
+
+        // Calculate real statistics
+        const pending = pickups.filter(p => p.status === 'pending').length;
+        const approved = pickups.filter(p => p.status === 'approved').length;
+        const completed = pickups.filter(p => p.status === 'completed').length;
+
+        // Get recent pickups (last 5)
+        const recent = (Array.isArray(pickups) ? pickups : [])
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, 5);
+
+        setRecentPickups(recent);
+
+        // Build role-specific stats with real data
+        let roleStats = [];
+
+        if (user?.role === 'admin') {
+          // Fetch student count for admin
+          const studentsResponse = await studentService.getAllStudents();
+          const students = studentsResponse.data || studentsResponse.students || studentsResponse || [];
+          const studentCount = Array.isArray(students) ? students.length : 0;
+
+          roleStats = [
+            {
+              name: 'Нийт сурагч',
+              value: studentCount.toString(),
+              icon: Users,
+              change: '+0',
+              changeType: 'neutral',
+              color: 'bg-blue-500',
+            },
+            {
+              name: 'Хүлээгдэж буй',
+              value: pending.toString(),
+              icon: Clock,
+              change: '+0',
+              changeType: 'neutral',
+              color: 'bg-yellow-500',
+            },
+            {
+              name: 'Баталгаажсан',
+              value: approved.toString(),
+              icon: ClipboardCheck,
+              change: '+0',
+              changeType: 'neutral',
+              color: 'bg-green-500',
+            },
+            {
+              name: 'Дууссан',
+              value: completed.toString(),
+              icon: CheckCircle,
+              change: '+0',
+              changeType: 'neutral',
+              color: 'bg-purple-500',
+            },
+          ];
+        } else {
+          roleStats = getStatsByRole();
+          // Update with real counts where possible
+          roleStats = roleStats.map(stat => {
+            if (stat.name === 'Хүлээгдэж буй') {
+              return { ...stat, value: pending.toString() };
+            } else if (stat.name === 'Баталгаажсан') {
+              return { ...stat, value: approved.toString() };
+            } else if (stat.name === 'Дууссан') {
+              return { ...stat, value: completed.toString() };
+            }
+            return stat;
+          });
+        }
+
+        setStats(roleStats);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Fallback to role-based mock stats
+        setStats(getStatsByRole());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -134,6 +203,17 @@ const DashboardPage = () => {
     const { variant, label } = statusMap[status] || statusMap.pending;
     return <Badge variant={variant}>{label}</Badge>;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="spinner mb-4"></div>
+          <p className="text-gray-600">Уншиж байна...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -199,31 +279,41 @@ const DashboardPage = () => {
               </tr>
             </thead>
             <tbody>
-              {recentPickups.map((pickup) => (
-                <tr key={pickup.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">
-                    <p className="font-medium text-gray-900">
-                      {pickup.studentName}
-                    </p>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="text-sm text-gray-600">
-                      {pickup.className}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <p className="text-sm text-gray-900">
-                      {pickup.guardianName}
-                    </p>
-                  </td>
-                  <td className="py-3 px-4">
-                    <p className="text-sm text-gray-600">{pickup.time}</p>
-                  </td>
-                  <td className="py-3 px-4">
-                    {getStatusBadge(pickup.status)}
+              {recentPickups.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="py-8 text-center text-gray-500">
+                    Хүсэлт олдсонгүй
                   </td>
                 </tr>
-              ))}
+              ) : (
+                recentPickups.map((pickup) => (
+                  <tr key={pickup.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <p className="font-medium text-gray-900">
+                        {pickup.student?.first_name || pickup.student_id || 'N/A'}
+                      </p>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-sm text-gray-600">
+                        {pickup.student?.class_id || '-'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <p className="text-sm text-gray-900">
+                        {pickup.requester?.full_name || pickup.requester_id || 'N/A'}
+                      </p>
+                    </td>
+                    <td className="py-3 px-4">
+                      <p className="text-sm text-gray-600">
+                        {pickup.requested_time ? new Date(pickup.requested_time).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                      </p>
+                    </td>
+                    <td className="py-3 px-4">
+                      {getStatusBadge(pickup.status)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
