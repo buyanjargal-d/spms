@@ -1,0 +1,77 @@
+name: Deploy to EC2 (Simple)
+
+on:
+  push:
+    branches:
+      - main
+      - developer
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          script: |
+            # Navigate to application directory
+            cd /home/${{ secrets.EC2_USERNAME }}/spms || {
+              echo "Creating spms directory..."
+              mkdir -p /home/${{ secrets.EC2_USERNAME }}/spms
+              cd /home/${{ secrets.EC2_USERNAME }}/spms
+              git clone https://github.com/${{ github.repository }} .
+            }
+
+            # Pull latest changes
+            echo "Pulling latest code..."
+            git fetch origin
+            git checkout ${{ github.ref_name }}
+            git pull origin ${{ github.ref_name }}
+
+            # Create .env file for backend if it doesn't exist
+            if [ ! -f backend/.env ]; then
+              echo "Creating backend .env file..."
+              cat > backend/.env << 'EOF'
+            NODE_ENV=production
+            PORT=3000
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+            EOF
+            fi
+
+            # Stop existing containers
+            echo "Stopping existing containers..."
+            docker-compose down
+
+            # Remove old images to save space
+            echo "Cleaning up old images..."
+            docker image prune -af --filter "until=72h"
+
+            # Build and start containers
+            echo "Building and starting containers..."
+            docker-compose up -d --build
+
+            # Show running containers
+            echo "Deployment complete! Running containers:"
+            docker-compose ps
+
+            # Show logs from last 50 lines
+            echo "Recent logs:"
+            docker-compose logs --tail=50
+
+      - name: Verify deployment
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "🌐 Frontend: http://${{ secrets.EC2_HOST }}"
+          echo "🔧 Backend API: http://${{ secrets.EC2_HOST }}:3000"
+          echo "📊 Branch: ${{ github.ref_name }}"
+          echo "📝 Commit: ${{ github.sha }}"

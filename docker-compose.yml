@@ -2,11 +2,12 @@ version: '3.8'
 
 services:
   # Backend API
-  api:
+  backend:
+    image: ${BACKEND_IMAGE:-spms-backend-local}
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: spms-backend-api
+    container_name: spms-backend
     ports:
       - "3000:3000"
     environment:
@@ -32,6 +33,27 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # Frontend Web Dashboard
+  frontend:
+    image: ${FRONTEND_IMAGE:-spms-frontend-local}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: spms-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   # Redis cache (optional, for future use)
   redis:

@@ -39,6 +39,8 @@ coverage/
 *.key
 secrets/
 *.token
+github-secrets-guide.md
+SECRET_VALUES.txt
 
 # Database
 *.sqlite
