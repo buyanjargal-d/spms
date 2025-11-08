@@ -84,17 +84,17 @@ const PickupRequestsPage = () => {
                   <tr key={req.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <p className="font-medium text-gray-900">
-                        {req.student?.first_name || req.student_id || 'N/A'}
+                        {req.student?.firstName || req.studentId || 'N/A'}
                       </p>
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-sm text-gray-900">
-                        {req.requester?.full_name || req.requester_id || 'N/A'}
+                        {req.requester?.fullName || req.requesterId || 'N/A'}
                       </p>
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-sm text-gray-600">
-                        {req.requested_time ? new Date(req.requested_time).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                        {req.requestedTime ? new Date(req.requestedTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' }) : '-'}
                       </p>
                     </td>
                     <td className="py-3 px-4">

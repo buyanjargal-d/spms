@@ -38,9 +38,9 @@ const StudentsPage = () => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
-      student.student_code?.toLowerCase().includes(searchLower) ||
-      student.first_name?.toLowerCase().includes(searchLower) ||
-      student.last_name?.toLowerCase().includes(searchLower)
+      student.studentCode?.toLowerCase().includes(searchLower) ||
+      student.firstName?.toLowerCase().includes(searchLower) ||
+      student.lastName?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -114,19 +114,19 @@ const StudentsPage = () => {
                 {filteredStudents.map((student) => (
                   <tr key={student.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4 text-sm text-gray-600">
-                      {student.student_code}
+                      {student.studentCode}
                     </td>
                     <td className="py-3 px-4 font-medium text-gray-900">
-                      {student.last_name} {student.first_name}
+                      {student.lastName} {student.firstName}
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-600">
-                      {student.grade_level}-р анги
+                      {student.gradeLevel}-р анги
                     </td>
                     <td className="py-3 px-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        student.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        student.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {student.is_active ? 'Идэвхтэй' : 'Идэвхгүй'}
+                        {student.isActive ? 'Идэвхтэй' : 'Идэвхгүй'}
                       </span>
                     </td>
                     <td className="py-3 px-4">

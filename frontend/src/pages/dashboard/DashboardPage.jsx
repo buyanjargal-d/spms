@@ -290,22 +290,22 @@ const DashboardPage = () => {
                   <tr key={pickup.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <p className="font-medium text-gray-900">
-                        {pickup.student?.first_name || pickup.student_id || 'N/A'}
+                        {pickup.student?.firstName || pickup.studentId || 'N/A'}
                       </p>
                     </td>
                     <td className="py-3 px-4">
                       <span className="text-sm text-gray-600">
-                        {pickup.student?.class_id || '-'}
+                        {pickup.student?.classId || '-'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-sm text-gray-900">
-                        {pickup.requester?.full_name || pickup.requester_id || 'N/A'}
+                        {pickup.requester?.fullName || pickup.requesterId || 'N/A'}
                       </p>
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-sm text-gray-600">
-                        {pickup.requested_time ? new Date(pickup.requested_time).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                        {pickup.requestedTime ? new Date(pickup.requestedTime).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' }) : '-'}
                       </p>
                     </td>
                     <td className="py-3 px-4">
