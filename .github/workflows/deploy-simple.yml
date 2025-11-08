@@ -19,39 +19,49 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT || 22 }}
-          script: |
+          # Pass secrets as environment variables to the SSH session
+          envs: DATABASE_URL,JWT_SECRET,JWT_REFRESH_SECRET,SUPABASE_URL,SUPABASE_KEY,BRANCH_NAME,USERNAME
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          USERNAME: ${{ secrets.EC2_USERNAME }}
+        script: |
             set -e
 
             # Check if repository directory exists
-            if [ ! -d "/home/${{ secrets.EC2_USERNAME }}/spms/.git" ]; then
+            if [ ! -d "/home/${USERNAME}/spms/.git" ]; then
               echo "📁 Repository not found. Cloning..."
-              rm -rf /home/${{ secrets.EC2_USERNAME }}/spms
-              mkdir -p /home/${{ secrets.EC2_USERNAME }}/spms
-              cd /home/${{ secrets.EC2_USERNAME }}/spms
+              rm -rf /home/${USERNAME}/spms
+              mkdir -p /home/${USERNAME}/spms
+              cd /home/${USERNAME}/spms
               git clone https://github.com/${{ github.repository }}.git .
             else
               echo "📁 Repository found. Updating..."
-              cd /home/${{ secrets.EC2_USERNAME }}/spms
+              cd /home/${USERNAME}/spms
             fi
 
             # Pull latest changes
-            echo "🔄 Pulling latest code from ${{ github.ref_name }}..."
+            echo "🔄 Pulling latest code from ${BRANCH_NAME}..."
             git fetch origin
-            git checkout ${{ github.ref_name }}
-            git reset --hard origin/${{ github.ref_name }}
-            git pull origin ${{ github.ref_name }}
+            git checkout ${BRANCH_NAME}
+            git reset --hard origin/${BRANCH_NAME}
+            git pull origin ${BRANCH_NAME}
 
-            # Create .env file for backend
+            # Create .env file for backend (note: no quotes around EOF)
             echo "⚙️  Creating backend .env file..."
-            cat > backend/.env << 'EOF'
-            NODE_ENV=production
-            PORT=3000
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
-            SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-            SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
-            EOF
+            cat > backend/.env << EOF
+NODE_ENV=production
+PORT=3000
+DATABASE_URL=${DATABASE_URL}
+JWT_SECRET=${JWT_SECRET}
+JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+SUPABASE_URL=${SUPABASE_URL}
+SUPABASE_KEY=${SUPABASE_KEY}
+EOF
 
             # Stop existing containers
             echo "🛑 Stopping existing containers..."
