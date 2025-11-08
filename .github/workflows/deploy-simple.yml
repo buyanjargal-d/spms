@@ -14,13 +14,6 @@ jobs:
     steps:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_SSH_PORT || 22 }}
-          # Pass secrets as environment variables to the SSH session
-          envs: DATABASE_URL,JWT_SECRET,JWT_REFRESH_SECRET,SUPABASE_URL,SUPABASE_KEY,BRANCH_NAME,USERNAME
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -29,7 +22,13 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           BRANCH_NAME: ${{ github.ref_name }}
           USERNAME: ${{ secrets.EC2_USERNAME }}
-        script: |
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          envs: DATABASE_URL,JWT_SECRET,JWT_REFRESH_SECRET,SUPABASE_URL,SUPABASE_KEY,BRANCH_NAME,USERNAME
+          script: |
             set -e
 
             # Check if repository directory exists
