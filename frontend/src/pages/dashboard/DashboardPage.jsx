@@ -5,6 +5,8 @@ import Badge from '../../components/common/Badge';
 import { useAuth } from '../../contexts/AuthContext';
 import { pickupService } from '../../services/pickupService';
 import { studentService } from '../../services/studentService';
+import { parentService } from '../../services/parentService';
+import { teacherService } from '../../services/teacherService';
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -164,6 +166,94 @@ const DashboardPage = () => {
               color: 'bg-purple-500',
             },
           ];
+        } else if (user?.role === 'parent') {
+          // Fetch parent-specific stats
+          try {
+            const parentStatsResponse = await parentService.getDashboardStats();
+            const parentStats = parentStatsResponse.data || {};
+
+            roleStats = [
+              {
+                name: 'Миний хүүхдүүд',
+                value: (parentStats.totalChildren || 0).toString(),
+                icon: Users,
+                change: '+0',
+                changeType: 'neutral',
+                color: 'bg-blue-500',
+              },
+              {
+                name: 'Идэвхтэй хүсэлт',
+                value: (parentStats.activeRequests || 0).toString(),
+                icon: ClipboardCheck,
+                change: '+0',
+                changeType: 'neutral',
+                color: 'bg-green-500',
+              },
+              {
+                name: 'Хүлээгдэж буй',
+                value: (parentStats.pendingRequests || 0).toString(),
+                icon: Clock,
+                change: '+0',
+                changeType: 'neutral',
+                color: 'bg-yellow-500',
+              },
+              {
+                name: 'Өнөөдөр дууссан',
+                value: (parentStats.completedToday || 0).toString(),
+                icon: CheckCircle,
+                change: '+0',
+                changeType: 'neutral',
+                color: 'bg-purple-500',
+              },
+            ];
+          } catch (error) {
+            console.error('Error fetching parent stats:', error);
+            roleStats = getStatsByRole();
+          }
+        } else if (user?.role === 'teacher') {
+          // Fetch teacher-specific stats
+          try {
+            const teacherStatsResponse = await teacherService.getDashboardStats();
+            const teacherStats = teacherStatsResponse.data || {};
+
+            roleStats = [
+              {
+                name: 'Миний анги',
+                value: (teacherStats.myClassStudents || 0).toString(),
+                icon: Users,
+                change: '+0',
+                changeType: 'neutral',
+                color: 'bg-blue-500',
+              },
+              {
+                name: 'Хүлээгдэж буй',
+                value: (teacherStats.pendingApprovals || 0).toString(),
+                icon: Clock,
+                change: '+0',
+                changeType: 'neutral',
+                color: 'bg-yellow-500',
+              },
+              {
+                name: 'Өнөөдрийн авалт',
+                value: (teacherStats.todayPickups || 0).toString(),
+                icon: ClipboardCheck,
+                change: '+0',
+                changeType: 'neutral',
+                color: 'bg-green-500',
+              },
+              {
+                name: 'Өнөөдөр дууссан',
+                value: (teacherStats.completedToday || 0).toString(),
+                icon: CheckCircle,
+                change: '+0',
+                changeType: 'neutral',
+                color: 'bg-purple-500',
+              },
+            ];
+          } catch (error) {
+            console.error('Error fetching teacher stats:', error);
+            roleStats = getStatsByRole();
+          }
         } else {
           roleStats = getStatsByRole();
           // Update with real counts where possible

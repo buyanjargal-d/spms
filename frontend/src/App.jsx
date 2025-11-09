@@ -9,6 +9,10 @@ import StudentsPage from './pages/students/StudentsPage';
 import StudentDetailPage from './pages/students/StudentDetailPage';
 import PickupRequestsPage from './pages/pickup/PickupRequestsPage';
 import PickupHistoryPage from './pages/pickup/PickupHistoryPage';
+import CreatePickupRequestPage from './pages/pickup/CreatePickupRequestPage';
+import MyChildrenPage from './pages/parent/MyChildrenPage';
+import MyRequestsPage from './pages/parent/MyRequestsPage';
+import NotificationPreferencesPage from './pages/parent/NotificationPreferencesPage';
 import ReportsPage from './pages/reports/ReportsPage';
 
 // Layout
@@ -92,6 +96,40 @@ const AppRoutes = () => {
           element={
             <RoleProtectedRoute allowedRoles={['admin', 'teacher', 'parent', 'guard']}>
               <PickupHistoryPage />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* Parent routes */}
+        <Route
+          path="pickup/create"
+          element={
+            <RoleProtectedRoute allowedRoles={['parent']}>
+              <CreatePickupRequestPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="pickup/requests"
+          element={
+            <RoleProtectedRoute allowedRoles={['parent']}>
+              <MyRequestsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="my-children"
+          element={
+            <RoleProtectedRoute allowedRoles={['parent']}>
+              <MyChildrenPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="notifications/preferences"
+          element={
+            <RoleProtectedRoute allowedRoles={['parent', 'teacher', 'admin']}>
+              <NotificationPreferencesPage />
             </RoleProtectedRoute>
           }
         />

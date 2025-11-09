@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../common/Button';
+import NotificationCenter from '../common/NotificationCenter';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,8 +40,8 @@ const DashboardLayout = () => {
       ],
       parent: [
         { name: 'Миний хүүхдүүд', href: '/my-children', icon: Users },
-        { name: 'Хүсэлт үүсгэх', href: '/create-pickup', icon: ClipboardList },
-        { name: 'Миний хүсэлтүүд', href: '/my-requests', icon: History },
+        { name: 'Хүсэлт үүсгэх', href: '/pickup/create', icon: ClipboardList },
+        { name: 'Миний хүсэлтүүд', href: '/pickup/requests', icon: History },
       ],
       guard: [
         { name: 'Авах хүсэлтүүд', href: '/pickup-requests', icon: ClipboardList },
@@ -157,10 +158,7 @@ const DashboardLayout = () => {
             <div className="flex-1 lg:flex-none" />
 
             <div className="flex items-center gap-4">
-              <button className="relative p-2 text-gray-600 hover:text-gray-900">
-                <Bell className="w-6 h-6" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </button>
+              <NotificationCenter />
             </div>
           </div>
         </header>
