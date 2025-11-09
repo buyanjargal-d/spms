@@ -8,8 +8,8 @@ export const authService = {
   },
 
   // Refresh token
-  async refreshToken() {
-    const response = await api.post('/auth/refresh');
+  async refreshToken(refreshToken) {
+    const response = await api.post('/auth/refresh', { refreshToken });
     return response.data;
   },
 

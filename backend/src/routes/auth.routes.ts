@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validateLogin } from '../validators/auth.validator';
+import { loginLimiter } from '../middleware/rateLimit.middleware';
 
 const router = Router();
 const authController = new AuthController();
@@ -11,14 +12,14 @@ const authController = new AuthController();
  * @desc    Authenticate user with DAN
  * @access  Public
  */
-router.post('/login', validateLogin, (req: Request, res: Response) => authController.login(req, res));
+router.post('/login', loginLimiter, validateLogin, (req: Request, res: Response) => authController.login(req, res));
 
 /**
  * @route   POST /api/v1/auth/refresh
  * @desc    Refresh access token
  * @access  Public
  */
-router.post('/refresh', (req: Request, res: Response) => authController.refreshToken(req, res));
+router.post('/refresh', loginLimiter, (req: Request, res: Response) => authController.refreshToken(req, res));
 
 /**
  * @route   POST /api/v1/auth/logout

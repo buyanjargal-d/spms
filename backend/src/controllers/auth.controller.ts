@@ -12,8 +12,10 @@ export class AuthController {
   async login(req: Request, res: Response): Promise<void> {
     try {
       const loginData: LoginRequest = req.body;
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      const userAgent = req.headers['user-agent'];
 
-      const result = await authService.login(loginData);
+      const result = await authService.login(loginData, ipAddress, userAgent);
 
       res.json({
         success: true,
@@ -21,10 +23,30 @@ export class AuthController {
         data: result,
       });
     } catch (error) {
+      // If login failed due to invalid credentials (not locked account)
+      const errorMessage = error instanceof Error ? error.message : 'Invalid credentials';
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      const userAgent = req.headers['user-agent'];
+
+      // Only record failed login if it's not already a locked account error
+      if (!errorMessage.includes('Account is locked') && !errorMessage.includes('Account locked')) {
+        try {
+          await authService.recordFailedLogin(req.body.danId, ipAddress, userAgent);
+        } catch (lockError) {
+          // lockError contains the updated message with attempts remaining or lock status
+          res.status(401).json({
+            success: false,
+            error: 'Authentication Failed',
+            message: lockError instanceof Error ? lockError.message : 'Invalid credentials',
+          });
+          return;
+        }
+      }
+
       res.status(401).json({
         success: false,
         error: 'Authentication Failed',
-        message: error instanceof Error ? error.message : 'Invalid credentials',
+        message: errorMessage,
       });
     }
   }

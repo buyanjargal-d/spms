@@ -45,6 +45,21 @@ export class User {
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive!: boolean;
 
+  @Column({ type: 'varchar', length: 255, nullable: true, select: false })
+  password?: string;
+
+  @Column({ type: 'timestamp with time zone', nullable: true, name: 'last_login_at' })
+  lastLoginAt?: Date;
+
+  @Column({ type: 'integer', default: 0, name: 'failed_login_attempts' })
+  failedLoginAttempts!: number;
+
+  @Column({ type: 'timestamp with time zone', nullable: true, name: 'account_locked_until' })
+  accountLockedUntil?: Date;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'notification_preferences' })
+  notificationPreferences?: Record<string, any>;
+
   @CreateDateColumn({ type: 'timestamp with time zone', name: 'created_at' })
   createdAt!: Date;
 

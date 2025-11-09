@@ -32,10 +32,11 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login(credentials);
 
       if (response.success && response.data) {
-        const { accessToken, user } = response.data;
+        const { accessToken, refreshToken, user } = response.data;
 
-        // Store token and user data
+        // Store tokens and user data
         localStorage.setItem('token', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
 
@@ -54,6 +55,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setUser(null);
   };
