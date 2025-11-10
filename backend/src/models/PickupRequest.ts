@@ -99,6 +99,63 @@ export class PickupRequest {
   @Column({ type: 'text', nullable: true, name: 'guest_photo_url' })
   guestPhotoUrl?: string;
 
+  // QR Code fields (Section 5)
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'qr_code' })
+  qrCode?: string;
+
+  @Column({ type: 'text', nullable: true, name: 'qr_code_data' })
+  qrCodeData?: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'qr_code_token' })
+  qrCodeToken?: string;
+
+  @Column({ type: 'timestamp with time zone', nullable: true, name: 'qr_expires_at' })
+  qrExpiresAt?: Date;
+
+  // Verification fields (Section 5)
+  @Column({
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+    name: 'verification_method'
+  })
+  verificationMethod?: 'qr' | 'manual' | 'emergency';
+
+  @Column({ type: 'uuid', nullable: true, name: 'completed_by' })
+  completedBy?: string;
+
+  @Column({ type: 'timestamp with time zone', nullable: true, name: 'completed_at' })
+  completedAt?: Date;
+
+  @Column({ type: 'text', nullable: true, name: 'verification_notes' })
+  verificationNotes?: string;
+
+  @Column({ type: 'boolean', default: false, name: 'photo_verified' })
+  photoVerified?: boolean;
+
+  // Emergency pickup fields (Section 5)
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'emergency_pickup_person' })
+  emergencyPickupPerson?: string;
+
+  @Column({ type: 'varchar', length: 20, nullable: true, name: 'emergency_pickup_phone' })
+  emergencyPickupPhone?: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'emergency_pickup_relationship' })
+  emergencyPickupRelationship?: string;
+
+  @Column({ type: 'text', nullable: true, name: 'emergency_pickup_reason' })
+  emergencyPickupReason?: string;
+
+  @Column({ type: 'boolean', default: false, name: 'requires_admin_review' })
+  requiresAdminReview?: boolean;
+
+  // Approval tracking
+  @Column({ type: 'uuid', nullable: true, name: 'approver_id' })
+  approverId?: string;
+
+  @Column({ type: 'timestamp with time zone', nullable: true, name: 'approved_at' })
+  approvedAt?: Date;
+
   @CreateDateColumn({ type: 'timestamp with time zone', name: 'created_at' })
   createdAt!: Date;
 
@@ -119,6 +176,14 @@ export class PickupRequest {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'pickup_person_id' })
   pickupPerson?: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'approver_id' })
+  approver?: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'completed_by' })
+  guard?: User;
 
   @OneToMany(() => GuestPickupApproval, (approval) => approval.pickupRequest)
   guestApprovals?: GuestPickupApproval[];

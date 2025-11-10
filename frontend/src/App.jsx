@@ -15,6 +15,11 @@ import MyRequestsPage from './pages/parent/MyRequestsPage';
 import NotificationPreferencesPage from './pages/parent/NotificationPreferencesPage';
 import ReportsPage from './pages/reports/ReportsPage';
 
+// Guard Pages
+import VerificationPage from './pages/guard/VerificationPage';
+import QueuePage from './pages/guard/QueuePage';
+import EmergencyPickupPage from './pages/guard/EmergencyPickupPage';
+
 // Layout
 import DashboardLayout from './components/layout/DashboardLayout';
 import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
@@ -130,6 +135,32 @@ const AppRoutes = () => {
           element={
             <RoleProtectedRoute allowedRoles={['parent', 'teacher', 'admin']}>
               <NotificationPreferencesPage />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* Guard routes */}
+        <Route
+          path="guard/verify"
+          element={
+            <RoleProtectedRoute allowedRoles={['guard', 'admin']}>
+              <VerificationPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="guard/queue"
+          element={
+            <RoleProtectedRoute allowedRoles={['guard', 'admin']}>
+              <QueuePage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="guard/emergency"
+          element={
+            <RoleProtectedRoute allowedRoles={['guard', 'admin']}>
+              <EmergencyPickupPage />
             </RoleProtectedRoute>
           }
         />

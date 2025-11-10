@@ -17,6 +17,8 @@ import studentRoutes from './routes/student.routes';
 import pickupRoutes from './routes/pickup.routes';
 import parentRoutes from './routes/parent.routes';
 import teacherRoutes from './routes/teacher.routes';
+import guardRoutes from './routes/guard.routes';
+import adminRoutes from './routes/admin.routes';
 import debugRoutes from './routes/debug.routes';
 
 class App {
@@ -88,6 +90,8 @@ class App {
     this.app.use(`${apiPrefix}/pickup`, pickupRoutes);
     this.app.use(`${apiPrefix}/parents`, parentRoutes);
     this.app.use(`${apiPrefix}/teachers`, teacherRoutes);
+    this.app.use(`${apiPrefix}/guards`, guardRoutes);
+    this.app.use(`${apiPrefix}/admin`, adminRoutes);
 
     // Debug routes (TEMPORARY - REMOVE AFTER DEBUGGING!)
     // Enabled temporarily to diagnose database issues

@@ -31,6 +31,16 @@ export class StudentGuardian {
   @Column({ type: 'boolean', default: true, name: 'is_authorized' })
   isAuthorized!: boolean;
 
+  // Section 6: Authorization tracking fields
+  @Column({ type: 'uuid', nullable: true, name: 'authorized_by' })
+  authorizedBy?: string;
+
+  @Column({ type: 'timestamp with time zone', nullable: true, name: 'authorized_at' })
+  authorizedAt?: Date;
+
+  @Column({ type: 'text', nullable: true, name: 'authorization_notes' })
+  authorizationNotes?: string;
+
   @CreateDateColumn({ type: 'timestamp with time zone', name: 'created_at' })
   createdAt!: Date;
 
@@ -46,4 +56,8 @@ export class StudentGuardian {
   })
   @JoinColumn({ name: 'guardian_id' })
   guardian!: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'authorized_by' })
+  authorizer?: User;
 }

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PickupService } from '../services/pickup.service';
 import { StudentService } from '../services/student.service';
+import qrcodeService from '../services/qrcode.service';
 import { CreatePickupRequestDTO, PickupRequestFilters } from '../types/pickup.types';
 import { RequestStatus, RequestType } from '../models/PickupRequest';
 import { UserRole } from '../models/User';
@@ -161,6 +162,11 @@ export class PickupController {
 
       const request = await pickupService.approvePickupRequest(id, req.user.id);
 
+      // Generate QR code for approved request (async, don't block response)
+      qrcodeService.generateQRCode(id).catch(error => {
+        console.error('Failed to generate QR code:', error);
+      });
+
       res.json({
         success: true,
         message: 'Pickup request approved',
@@ -300,6 +306,104 @@ export class PickupController {
         success: false,
         error: 'Server Error',
         message: 'Failed to fetch pickup history',
+      });
+    }
+  }
+
+  /**
+   * Get QR code for pickup request
+   * GET /api/v1/pickup/:id/qrcode
+   */
+  async getQRCode(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          message: 'User not authenticated',
+        });
+        return;
+      }
+
+      const { id } = req.params;
+
+      const result = await qrcodeService.getQRCode(id);
+
+      if (!result.success) {
+        res.status(400).json({
+          success: false,
+          error: 'QR Code Error',
+          message: result.message,
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        message: result.message,
+        data: {
+          qrCodeData: result.qrCodeData,
+          expiresAt: result.expiresAt,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Server Error',
+        message: error instanceof Error ? error.message : 'Failed to get QR code',
+      });
+    }
+  }
+
+  /**
+   * Verify QR code
+   * POST /api/v1/pickup/verify-qr
+   */
+  async verifyQRCode(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          message: 'User not authenticated',
+        });
+        return;
+      }
+
+      const { qrData } = req.body;
+
+      if (!qrData) {
+        res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'QR data is required',
+        });
+        return;
+      }
+
+      const result = await qrcodeService.verifyQRCode(qrData);
+
+      if (!result.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Verification Failed',
+          message: result.message,
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        message: result.message,
+        data: {
+          pickupRequest: result.pickupRequest,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Server Error',
+        message: error instanceof Error ? error.message : 'Failed to verify QR code',
       });
     }
   }

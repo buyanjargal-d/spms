@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database';
-import { PickupRequest, RequestStatus } from '../models/PickupRequest';
+import { PickupRequest, RequestStatus, RequestType } from '../models/PickupRequest';
 import { User } from '../models/User';
 import { Student } from '../models/Student';
 
@@ -36,21 +36,18 @@ interface EmergencyPickupData {
 
 export class GuardService {
   private pickupRequestRepository: Repository<PickupRequest>;
-  private userRepository: Repository<User>;
   private studentRepository: Repository<Student>;
 
   constructor() {
     this.pickupRequestRepository = AppDataSource.getRepository(PickupRequest);
-    this.userRepository = AppDataSource.getRepository(User);
     this.studentRepository = AppDataSource.getRepository(Student);
   }
 
   /**
    * Verify pickup request by QR code
    * @param qrToken - QR code token to verify
-   * @param guardId - ID of the guard performing verification
    */
-  async verifyByQRCode(qrToken: string, guardId: string): Promise<VerificationResult> {
+  async verifyByQRCode(qrToken: string, _guardId: string): Promise<VerificationResult> {
     try {
       // Find pickup request by QR token
       const pickupRequest = await this.pickupRequestRepository.findOne({
@@ -108,9 +105,8 @@ export class GuardService {
   /**
    * Verify pickup request manually by student ID
    * @param studentId - Student ID to search for
-   * @param guardId - ID of the guard performing verification
    */
-  async verifyByStudentId(studentId: string, guardId: string): Promise<VerificationResult> {
+  async verifyByStudentId(studentId: string, _guardId: string): Promise<VerificationResult> {
     try {
       // Find approved pickup request for this student
       const pickupRequest = await this.pickupRequestRepository.findOne({
@@ -198,9 +194,8 @@ export class GuardService {
 
   /**
    * Get real-time pickup queue (approved requests waiting for pickup)
-   * @param guardId - ID of the guard requesting the queue
    */
-  async getPickupQueue(guardId: string): Promise<QueueItem[]> {
+  async getPickupQueue(_guardId: string): Promise<QueueItem[]> {
     try {
       const approvedPickups = await this.pickupRequestRepository.find({
         where: { status: RequestStatus.APPROVED },
@@ -217,10 +212,10 @@ export class GuardService {
           studentName: pickup.student
             ? `${pickup.student.firstName} ${pickup.student.lastName}`
             : 'Unknown',
-          studentPhoto: pickup.student?.photoUrl,
+          studentPhoto: pickup.student?.profilePhotoUrl,
           className: pickup.student?.classId || 'N/A',
           authorizedPersonName: pickup.requester?.fullName || 'Unknown',
-          authorizedPersonPhoto: pickup.requester?.photoUrl,
+          authorizedPersonPhoto: pickup.requester?.profilePhotoUrl,
           requestedTime: pickup.requestedTime,
           approvedAt: pickup.approvedAt,
           waitingTime,
@@ -261,7 +256,7 @@ export class GuardService {
       const emergencyPickup = this.pickupRequestRepository.create({
         studentId: data.studentId,
         requesterId: guardId, // Guard is creating this
-        requestType: 'emergency',
+        requestType: RequestType.STANDARD, // Use STANDARD type for emergency
         requestedTime: new Date(),
         status: RequestStatus.APPROVED, // Auto-approved for emergency
         approvedAt: new Date(),
@@ -295,9 +290,8 @@ export class GuardService {
 
   /**
    * Get guard dashboard statistics
-   * @param guardId - ID of the guard
    */
-  async getGuardStats(guardId: string) {
+  async getGuardStats(_guardId: string) {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -320,10 +314,10 @@ export class GuardService {
         where: { status: RequestStatus.APPROVED },
       });
 
-      // Count emergency pickups today
+      // Count emergency pickups today (using requiresAdminReview as emergency flag)
       const emergencyToday = await this.pickupRequestRepository.count({
         where: {
-          requestType: 'emergency',
+          requiresAdminReview: true,
           requestedTime: {
             $gte: today,
             $lt: tomorrow,

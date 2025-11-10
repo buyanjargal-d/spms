@@ -41,6 +41,25 @@ export class Student {
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive!: boolean;
 
+  // Section 6: Enhanced student information fields
+  @Column({ type: 'text', nullable: true, name: 'medical_conditions' })
+  medicalConditions?: string;
+
+  @Column({ type: 'text', nullable: true })
+  allergies?: string;
+
+  @Column({ type: 'text', nullable: true })
+  medications?: string;
+
+  @Column({ type: 'text', nullable: true, name: 'emergency_notes' })
+  emergencyNotes?: string;
+
+  @Column({ type: 'text', nullable: true, name: 'pickup_instructions' })
+  pickupInstructions?: string;
+
+  @Column({ type: 'date', nullable: true, name: 'enrollment_date' })
+  enrollmentDate?: Date;
+
   @CreateDateColumn({ type: 'timestamp with time zone', name: 'created_at' })
   createdAt!: Date;
 

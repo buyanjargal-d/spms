@@ -70,4 +70,18 @@ router.patch('/:id/complete', authenticate, authorize([UserRole.TEACHER, UserRol
  */
 router.patch('/:id/cancel', authenticate, (req, res) => pickupController.cancelPickupRequest(req, res));
 
+/**
+ * @route   GET /api/v1/pickup/:id/qrcode
+ * @desc    Get QR code for pickup request
+ * @access  Private (Parent, Teacher, Admin)
+ */
+router.get('/:id/qrcode', authenticate, authorize([UserRole.PARENT, UserRole.TEACHER, UserRole.ADMIN]), (req, res) => pickupController.getQRCode(req, res));
+
+/**
+ * @route   POST /api/v1/pickup/verify-qr
+ * @desc    Verify QR code
+ * @access  Private (Guard, Admin)
+ */
+router.post('/verify-qr', authenticate, authorize([UserRole.GUARD, UserRole.ADMIN]), (req, res) => pickupController.verifyQRCode(req, res));
+
 export default router;

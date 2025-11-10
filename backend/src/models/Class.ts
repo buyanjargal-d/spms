@@ -27,6 +27,22 @@ export class Class {
   @Column({ type: 'varchar', length: 20, name: 'school_year' })
   schoolYear!: string;
 
+  // Section 6: Enhanced class management fields
+  @Column({ type: 'varchar', length: 20, nullable: true, name: 'academic_year' })
+  academicYear?: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'room_number' })
+  roomNumber?: string;
+
+  @Column({ type: 'integer', nullable: true, default: 30 })
+  capacity?: number;
+
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
+  isActive!: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
+
   @CreateDateColumn({ type: 'timestamp with time zone', name: 'created_at' })
   createdAt!: Date;
 

@@ -10,7 +10,9 @@ import {
   X,
   LogOut,
   Bell,
-  CheckCircle
+  CheckCircle,
+  QrCode,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../common/Button';
@@ -44,8 +46,9 @@ const DashboardLayout = () => {
         { name: 'Миний хүсэлтүүд', href: '/pickup/requests', icon: History },
       ],
       guard: [
-        { name: 'Авах хүсэлтүүд', href: '/pickup-requests', icon: ClipboardList },
-        { name: 'Баталгаажуулах', href: '/verify-pickup', icon: CheckCircle },
+        { name: 'Баталгаажуулах', href: '/guard/verify', icon: QrCode },
+        { name: 'Дараалал', href: '/guard/queue', icon: ClipboardList },
+        { name: 'Яаралтай', href: '/guard/emergency', icon: AlertTriangle },
         { name: 'Түүх', href: '/pickup-history', icon: History },
       ],
     };
