@@ -52,9 +52,23 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      API_PREFIX: ${API_PREFIX:-/api/v1}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-spms}
+      DIRECT_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-spms}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_KEY: ${SUPABASE_KEY:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      USE_MOCK_DAN: ${USE_MOCK_DAN:-true}
+      DAN_CLIENT_ID: ${DAN_CLIENT_ID:-mock-client-id}
+      DAN_CLIENT_SECRET: ${DAN_CLIENT_SECRET:-mock-client-secret}
+      DAN_API_URL: ${DAN_API_URL:-https://dan.gov.mn/api}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE_PATH: ${LOG_FILE_PATH:-/app/logs}
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,6 +80,27 @@ services:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health')"]
       interval: 30s
       timeout: 10s
+      retries: 3
+    networks:
+      - spms-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+    container_name: spms-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
       retries: 3
     networks:
       - spms-network
