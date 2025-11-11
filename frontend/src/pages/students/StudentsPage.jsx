@@ -1,35 +1,39 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { Plus, Search } from 'lucide-react';
 import { studentService } from '../../services/studentService';
 import toast from 'react-hot-toast';
+import AddStudentModal from '../../components/admin/AddStudentModal';
 
 const StudentsPage = () => {
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Fetch students from API
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const response = await studentService.getAllStudents();
+      console.log('Students API response:', response);
+
+      // Handle different response formats
+      const studentsData = response.data || response.students || response;
+      setStudents(Array.isArray(studentsData) ? studentsData : []);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast.error('Сурагчдын мэдээлэл татахад алдаа гарлаа');
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        setLoading(true);
-        const response = await studentService.getAllStudents();
-        console.log('Students API response:', response);
-
-        // Handle different response formats
-        const studentsData = response.data || response.students || response;
-        setStudents(Array.isArray(studentsData) ? studentsData : []);
-      } catch (error) {
-        console.error('Error fetching students:', error);
-        toast.error('Сурагчдын мэдээлэл татахад алдаа гарлаа');
-        setStudents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStudents();
   }, []);
 
@@ -62,7 +66,7 @@ const StudentsPage = () => {
           <h1 className="text-2xl font-bold text-gray-900">Сурагчид</h1>
           <p className="text-gray-600 mt-1">Бүх сурагчдын жагсаалт</p>
         </div>
-        <Button variant="primary">
+        <Button variant="primary" onClick={() => setShowAddModal(true)}>
           <Plus className="w-5 h-5 mr-2" />
           Сурагч нэмэх
         </Button>
@@ -130,7 +134,11 @@ const StudentsPage = () => {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <Button variant="secondary" size="sm">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => navigate(`/students/${student.id}`)}
+                      >
                         Дэлгэрэнгүй
                       </Button>
                     </td>
@@ -141,6 +149,16 @@ const StudentsPage = () => {
           </div>
         )}
       </Card>
+
+      {showAddModal && (
+        <AddStudentModal
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            setShowAddModal(false);
+            fetchStudents();
+          }}
+        />
+      )}
     </div>
   );
 };

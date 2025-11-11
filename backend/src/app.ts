@@ -19,6 +19,7 @@ import parentRoutes from './routes/parent.routes';
 import teacherRoutes from './routes/teacher.routes';
 import guardRoutes from './routes/guard.routes';
 import adminRoutes from './routes/admin.routes';
+import reportsRoutes from './routes/reports.routes';
 import debugRoutes from './routes/debug.routes';
 
 class App {
@@ -92,6 +93,7 @@ class App {
     this.app.use(`${apiPrefix}/teachers`, teacherRoutes);
     this.app.use(`${apiPrefix}/guards`, guardRoutes);
     this.app.use(`${apiPrefix}/admin`, adminRoutes);
+    this.app.use(`${apiPrefix}/reports`, reportsRoutes);
 
     // Debug routes (TEMPORARY - REMOVE AFTER DEBUGGING!)
     // Enabled temporarily to diagnose database issues

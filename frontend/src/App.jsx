@@ -15,6 +15,9 @@ import MyRequestsPage from './pages/parent/MyRequestsPage';
 import NotificationPreferencesPage from './pages/parent/NotificationPreferencesPage';
 import ReportsPage from './pages/reports/ReportsPage';
 
+// Admin Pages
+import UserManagementPage from './pages/admin/UserManagementPage';
+
 // Guard Pages
 import VerificationPage from './pages/guard/VerificationPage';
 import QueuePage from './pages/guard/QueuePage';
@@ -62,6 +65,14 @@ const AppRoutes = () => {
         <Route index element={<DashboardPage />} />
 
         {/* Admin only routes */}
+        <Route
+          path="admin/users"
+          element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <UserManagementPage />
+            </RoleProtectedRoute>
+          }
+        />
         <Route
           path="students"
           element={
