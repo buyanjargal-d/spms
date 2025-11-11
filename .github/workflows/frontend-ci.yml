@@ -1,15 +1,17 @@
 name: Frontend CI/CD Pipeline
 
 on:
-  push:
-    branches: [ main, developer, staging ]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
-  pull_request:
-    branches: [ main, developer ]
-    paths:
-      - 'frontend/**'
+  # Disabled - using deploy-simple.yml only
+  workflow_dispatch:
+  # push:
+  #   branches: [ main, developer, staging ]
+  #   paths:
+  #     - 'frontend/**'
+  #     - '.github/workflows/frontend-ci.yml'
+  # pull_request:
+  #   branches: [ main, developer ]
+  #   paths:
+  #     - 'frontend/**'
 
 jobs:
   # Security Scanning

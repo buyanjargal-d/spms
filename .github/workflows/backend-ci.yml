@@ -1,15 +1,17 @@
 name: Backend CI/CD Pipeline
 
 on:
-  push:
-    branches: [ main, developer, staging ]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
-  pull_request:
-    branches: [ main, developer ]
-    paths:
-      - 'backend/**'
+  # Disabled - using deploy-simple.yml only
+  workflow_dispatch:
+  # push:
+  #   branches: [ main, developer, staging ]
+  #   paths:
+  #     - 'backend/**'
+  #     - '.github/workflows/backend-ci.yml'
+  # pull_request:
+  #   branches: [ main, developer ]
+  #   paths:
+  #     - 'backend/**'
 
 jobs:
   # Security Scanning Job
