@@ -185,7 +185,7 @@ const AddStudentModal = ({ onClose, onSuccess }) => {
                   className={`input-field ${errors.gradeLevel ? 'border-red-500' : ''}`}
                 >
                   {[...Array(12)].map((_, i) => (
-                    <key={i + 1} value={i + 1}>
+                    <option key={i + 1} value={i + 1}>
                       {i + 1}-р анги
                     </option>
                   ))}
