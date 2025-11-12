@@ -53,7 +53,7 @@ echo ""
 
 echo -e "${YELLOW}9. Check frontend build - API URL in compiled code...${NC}"
 echo "Checking if frontend has correct API URL compiled in:"
-docker exec spms-frontend grep -r "3.94.130.22" /usr/share/nginx/html/ 2>/dev/null | head -5 || \
+docker exec spms-frontend grep -r "34.197.247.53" /usr/share/nginx/html/ 2>/dev/null | head -5 || \
 docker exec spms-frontend grep -r "localhost:3000" /usr/share/nginx/html/ 2>/dev/null | head -5
 echo ""
 
@@ -64,6 +64,6 @@ echo ""
 echo "Next steps:"
 echo "1. Check if frontend logs show API requests"
 echo "2. Verify backend logs show incoming requests"
-echo "3. Check if API URL in frontend build is correct (should be 3.94.130.22)"
+echo "3. Check if API URL in frontend build is correct (should be 34.197.247.53)"
 echo "4. If API URL is still localhost, rebuild frontend with correct env var"
 echo ""

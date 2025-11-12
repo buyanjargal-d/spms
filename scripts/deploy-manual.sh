@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-EC2_HOST="3.94.130.22"
+EC2_HOST="34.197.247.53"
 EC2_USER="ubuntu"  # Change to "ubuntu" if using Ubuntu
 PEM_FILE="$HOME/Downloads/spms-backend.pem"
 REMOTE_DIR="~/spms-backend"

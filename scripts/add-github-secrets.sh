@@ -35,7 +35,7 @@ echo ""
 
 # EC2 Configuration
 echo "📝 Adding EC2_HOST..."
-echo "3.94.130.22" | gh secret set EC2_HOST --repo "$REPO"
+echo "34.197.247.53" | gh secret set EC2_HOST --repo "$REPO"
 
 echo "📝 Adding EC2_USERNAME..."
 echo "ubuntu" | gh secret set EC2_USERNAME --repo "$REPO"
