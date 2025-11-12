@@ -6,14 +6,24 @@ config();
 
 // Determine SSL configuration based on DATABASE_URL
 // Supabase Transaction Pooler (port 6543) doesn't support SSL
+// Local PostgreSQL (postgres:5432) doesn't support SSL
 // Supabase Session Pooler (port 5432) requires SSL
 const databaseUrl = process.env.DATABASE_URL || '';
 const isTransactionPooler = databaseUrl.includes(':6543');
+const isLocalPostgres = databaseUrl.includes('@postgres:5432') || databaseUrl.includes('@localhost:5432');
+
+// Log SSL configuration for debugging
+console.log('🔍 Database URL check:', {
+  hasTransactionPooler: isTransactionPooler,
+  hasLocalPostgres: isLocalPostgres,
+  willUseSSL: !(isTransactionPooler || isLocalPostgres),
+  urlPattern: databaseUrl.replace(/:[^:@]+@/, ':****@') // Hide password
+});
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
-  ssl: isTransactionPooler ? false : {
+  ssl: (isTransactionPooler || isLocalPostgres) ? false : {
     rejectUnauthorized: false
   },
   synchronize: false, // NEVER use true in production
