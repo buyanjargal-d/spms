@@ -4,10 +4,16 @@ import { config } from 'dotenv';
 // Load environment variables
 config();
 
+// Determine SSL configuration based on DATABASE_URL
+// Supabase Transaction Pooler (port 6543) doesn't support SSL
+// Supabase Session Pooler (port 5432) requires SSL
+const databaseUrl = process.env.DATABASE_URL || '';
+const isTransactionPooler = databaseUrl.includes(':6543');
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
-  ssl: {
+  ssl: isTransactionPooler ? false : {
     rejectUnauthorized: false
   },
   synchronize: false, // NEVER use true in production
