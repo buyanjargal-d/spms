@@ -33,13 +33,16 @@ jobs:
           script: |
             set -e
 
+            # Configure Git to use SSH
+            export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
+
             # Check if repository directory exists
             if [ ! -d "/home/${USERNAME}/spms/.git" ]; then
               echo "📁 Repository not found. Cloning..."
               rm -rf /home/${USERNAME}/spms
               mkdir -p /home/${USERNAME}/spms
               cd /home/${USERNAME}/spms
-              git clone https://github.com/${{ github.repository }}.git .
+              git clone git@github.com:${{ github.repository }}.git .
             else
               echo "📁 Repository found. Updating..."
               cd /home/${USERNAME}/spms
