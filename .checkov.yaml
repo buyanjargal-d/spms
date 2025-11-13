@@ -1,0 +1,88 @@
+# Checkov Configuration for SPMS
+# Infrastructure as Code Security and Compliance Scanner
+
+# Directories and files to scan
+directory:
+  - .
+
+# Frameworks to scan
+framework:
+  - dockerfile
+  - github_actions
+  - secrets
+
+# Skip specific checks (add check IDs to skip)
+skip-check:
+  # Example: Skip specific checks that are not applicable
+  # - CKV_DOCKER_2  # Ensure that HEALTHCHECK is present
+  # - CKV_DOCKER_3  # Ensure that a user for the container has been created
+
+# Compact mode
+compact: false
+
+# Quiet mode
+quiet: false
+
+# Output format
+output:
+  - cli
+  - json
+  - sarif
+  - junitxml
+
+# Output file path
+output-file-path: checkov-results
+
+# Soft fail mode (don't exit with error code)
+soft-fail: true
+
+# Download external modules
+download-external-modules: true
+
+# External modules download timeout
+external-modules-download-timeout: 30
+
+# Check severity threshold (INFO, LOW, MEDIUM, HIGH, CRITICAL)
+check-severity-threshold: LOW
+
+# Enable secrets scanning
+enable-secret-scan-all-files: true
+
+# Secrets history scanning
+secrets-history-timeout: 43200
+
+# Prisma Cloud API settings (if using Prisma Cloud)
+# prisma-api-url: https://api.prismacloud.io
+# bc-api-key: your-api-key
+
+# Repo ID for tracking
+# repo-id: your-org/spms
+
+# Branch for tracking
+branch: main
+
+# Skip download of external modules
+# skip-download: false
+
+# Create guidelines URL
+# guidelines: https://your-guidelines-url.com
+
+# Evaluate variables
+evaluate-variables: true
+
+# Exclude paths
+exclude-paths:
+  - node_modules
+  - dist
+  - build
+  - coverage
+  - .git
+
+# Baseline file
+# baseline: .checkov.baseline
+
+# Log level
+log-level: INFO
+
+# Deep analysis
+deep-analysis: true

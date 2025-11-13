@@ -1,0 +1,105 @@
+# Trivy Configuration for SPMS
+# Container and Filesystem Vulnerability Scanner
+
+# Scan settings
+scan:
+  # Security check types
+  security-checks:
+    - vuln      # Vulnerabilities
+    - config    # Misconfigurations
+    - secret    # Secrets
+
+  # Scanners to use
+  scanners:
+    - vuln
+    - config
+    - secret
+    - license
+
+# Vulnerability settings
+vulnerability:
+  # Vulnerability types to detect
+  type:
+    - os        # OS packages
+    - library   # Application dependencies
+
+  # Severity levels to report
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+    - LOW
+    - UNKNOWN
+
+# Output settings
+format: table
+output: trivy-report.txt
+
+# Report settings
+report:
+  format: all
+  template: "@contrib/html.tpl"
+  output: trivy-report.html
+
+# Cache settings
+cache:
+  clear: false
+  backend: fs
+  dir: .trivycache/
+
+# Database settings
+db:
+  no-progress: false
+  skip-update: false
+  repository: ghcr.io/aquasecurity/trivy-db
+
+# Ignorefile
+ignorefile: .trivyignore
+
+# Exit code when vulnerabilities found
+exit-code: 0  # Don't fail build, just report
+exit-on-eol: 0
+
+# Secret scanning
+secret:
+  config: trivy-secret.yaml
+
+# License scanning
+license:
+  full: true
+  confidenceLevel: 0.9
+
+# Misconfiguration scanning
+misconfig:
+  # Scanners for misconfiguration
+  scanners:
+    - dockerfile
+    - kubernetes
+    - terraform
+
+# Timeout settings
+timeout: 5m0s
+
+# Skip files/directories
+skip-files:
+  - "node_modules/**"
+  - "dist/**"
+  - "build/**"
+  - "coverage/**"
+  - ".git/**"
+
+skip-dirs:
+  - node_modules
+  - dist
+  - build
+  - coverage
+  - .git
+
+# Offline mode
+offline-scan: false
+
+# Ignore unfixed vulnerabilities
+ignore-unfixed: false
+
+# Policy
+# policy: policy.rego

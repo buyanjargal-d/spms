@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dependencyCheck xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:noNamespaceSchemaLocation="https://jeremylong.github.io/DependencyCheck/dependency-check.xsd">
+
+    <!-- Project Information -->
+    <project>
+        <name>SPMS - School Performance Management System</name>
+        <version>1.0.0</version>
+    </project>
+
+    <!-- Scan Settings -->
+    <scan>
+        <path>.</path>
+        <scanDirectory>
+            <path>backend</path>
+            <path>frontend</path>
+        </scanDirectory>
+    </scan>
+
+    <!-- Analyzers -->
+    <analyzers>
+        <!-- Enable/Disable specific analyzers -->
+        <assembly enabled="false"/>
+        <msbuildProject enabled="false"/>
+        <nuspec enabled="false"/>
+        <nugetconf enabled="false"/>
+        <central enabled="true"/>
+        <nexus enabled="false"/>
+        <archive enabled="true"/>
+        <jar enabled="true"/>
+        <node enabled="true"/>
+        <nodejs enabled="true"/>
+        <retirejs enabled="true"/>
+        <ossIndex enabled="true"/>
+        <mix enabled="false"/>
+        <swift enabled="false"/>
+        <cocoapods enabled="false"/>
+        <bundleAudit enabled="false"/>
+        <python enabled="false"/>
+        <autoconf enabled="false"/>
+        <cmake enabled="false"/>
+        <composer enabled="false"/>
+        <cpan enabled="false"/>
+        <golang enabled="false"/>
+    </analyzers>
+
+    <!-- Reporting -->
+    <reports>
+        <format>HTML</format>
+        <format>JSON</format>
+        <format>XML</format>
+        <format>CSV</format>
+        <format>JUNIT</format>
+        <format>SARIF</format>
+        <outputDirectory>dependency-check-report</outputDirectory>
+    </reports>
+
+    <!-- Suppression File -->
+    <suppressionFile>dependency-check-suppressions.xml</suppressionFile>
+
+    <!-- Fail Build Thresholds -->
+    <failBuildOnCVSS>
+        <score>7.0</score> <!-- Fail if CVSS score >= 7.0 (High/Critical) -->
+    </failBuildOnCVSS>
+
+    <!-- Data Settings -->
+    <data>
+        <connectionTimeout>30000</connectionTimeout>
+        <dataDirectory>dependency-check-data</dataDirectory>
+        <updateOnly>false</updateOnly>
+    </data>
+
+    <!-- CVE Settings -->
+    <cve>
+        <url>
+            <base>https://nvd.nist.gov/feeds/json/cve/1.1/</base>
+            <modified>https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.json.gz</modified>
+        </url>
+    </cve>
+
+    <!-- Hint Rules -->
+    <hints>
+        <file>hints.xml</file>
+    </hints>
+
+    <!-- Exclude Patterns -->
+    <exclude>
+        <pattern>node_modules/**</pattern>
+        <pattern>dist/**</pattern>
+        <pattern>build/**</pattern>
+        <pattern>coverage/**</pattern>
+        <pattern>**/*.test.*</pattern>
+        <pattern>**/*.spec.*</pattern>
+    </exclude>
+
+    <!-- Advanced Settings -->
+    <advanced>
+        <prettyPrint>true</prettyPrint>
+        <enableExperimental>true</enableExperimental>
+        <enableRetired>true</enableRetired>
+    </advanced>
+
+</dependencyCheck>

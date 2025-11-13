@@ -1,0 +1,11 @@
+# Trivy Ignore File
+# Add CVEs that are false positives or accepted risks
+
+# Example: Ignore specific CVE
+# CVE-2021-12345
+
+# Ignore vulnerabilities in specific packages
+# pkg:npm/example-package@1.0.0
+
+# Add your project-specific ignores below:
+# -------------------------------------------

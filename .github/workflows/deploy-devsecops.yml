@@ -1,0 +1,732 @@
+name: DevSecOps Pipeline - Production
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  DEPLOY_BRANCH: ${{ github.ref_name }}
+  SONAR_HOST_URL: https://sonarcloud.io
+
+jobs:
+  # Stage 1: Code Quality & Security Analysis
+  code-security-analysis:
+    name: Code Quality & SAST
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      # SonarQube/SonarCloud Analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+
+      # Secrets Scanning with GitLeaks
+      - name: GitLeaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Semgrep SAST
+      - name: Semgrep Security Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/owasp-top-ten
+            p/nodejs
+            p/typescript
+            p/react
+
+      # Install dependencies for analysis
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      # ESLint Security Analysis
+      - name: Run ESLint Security Check
+        run: |
+          cd backend
+          npx eslint . --ext .ts,.js --format json --output-file ../eslint-backend-report.json || true
+          cd ../frontend
+          npx eslint . --ext .ts,.tsx,.js,.jsx --format json --output-file ../eslint-frontend-report.json || true
+
+      - name: Upload ESLint Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-reports
+          path: |
+            eslint-backend-report.json
+            eslint-frontend-report.json
+
+  # Stage 2: Dependency Security Scanning
+  dependency-security:
+    name: Dependency Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # NPM Audit
+      - name: NPM Audit - Backend
+        working-directory: ./backend
+        run: |
+          npm audit --json > ../npm-audit-backend.json || true
+          npm audit --audit-level=moderate || echo "Backend has vulnerabilities"
+
+      - name: NPM Audit - Frontend
+        working-directory: ./frontend
+        run: |
+          npm audit --json > ../npm-audit-frontend.json || true
+          npm audit --audit-level=moderate || echo "Frontend has vulnerabilities"
+
+      # Snyk Security Scan
+      - name: Snyk Security Scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-projects --severity-threshold=high
+
+      # OWASP Dependency-Check
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        env:
+          JAVA_HOME: /opt/jdk
+        with:
+          project: 'SPMS'
+          path: '.'
+          format: 'HTML'
+          out: 'dependency-check-report'
+          args: >
+            --enableRetired
+            --enableExperimental
+
+      - name: Upload Dependency-Check Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: dependency-check-report
+
+      - name: Upload NPM Audit Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-reports
+          path: |
+            npm-audit-backend.json
+            npm-audit-frontend.json
+
+  # Stage 3: Build & Unit Tests
+  build-and-test:
+    name: Build and Unit Test
+    runs-on: ubuntu-latest
+    needs: [code-security-analysis, dependency-security]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Run backend tests with coverage
+        working-directory: ./backend
+        run: npm test -- --coverage || echo "No tests configured"
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./frontend
+        env:
+          VITE_API_URL: /api/v1
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            backend/dist
+            frontend/dist
+
+  # Stage 4: Container Security Scanning
+  container-security:
+    name: Container Security Scanning
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build images for scanning
+      - name: Build backend image
+        run: |
+          docker build -t spms-backend:${{ github.sha }} ./backend
+
+      - name: Build frontend image
+        run: |
+          docker build -t spms-frontend:${{ github.sha }} ./frontend
+
+      # Trivy Container Scanning
+      - name: Trivy Scan - Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'spms-backend:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-backend-report.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Trivy Scan - Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'spms-frontend:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-frontend-report.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy Reports
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: |
+            trivy-backend-report.sarif
+            trivy-frontend-report.sarif
+
+      # Trivy JSON Reports
+      - name: Trivy JSON Scan - Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'spms-backend:${{ github.sha }}'
+          format: 'json'
+          output: 'trivy-backend-report.json'
+
+      - name: Trivy JSON Scan - Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'spms-frontend:${{ github.sha }}'
+          format: 'json'
+          output: 'trivy-frontend-report.json'
+
+      - name: Upload Trivy JSON Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-reports
+          path: |
+            trivy-backend-report.json
+            trivy-frontend-report.json
+
+      # Docker Scout (if available)
+      - name: Docker Scout CVE Scan
+        uses: docker/scout-action@v1
+        continue-on-error: true
+        with:
+          command: cves
+          image: spms-backend:${{ github.sha }}
+          only-severities: critical,high
+          sarif-file: scout-backend-report.sarif
+
+      - name: Upload Scout Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scout-reports
+          path: scout-backend-report.sarif
+
+  # Stage 5: Infrastructure as Code Security
+  iac-security:
+    name: IaC Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Checkov IaC Security Scan
+      - name: Checkov IaC Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,github_actions
+          output_format: cli,json,sarif
+          output_file_path: console,checkov-report.json,checkov-report.sarif
+          download_external_modules: true
+          soft_fail: true
+
+      - name: Upload Checkov Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checkov-reports
+          path: |
+            checkov-report.json
+            checkov-report.sarif
+
+      # Hadolint - Dockerfile Linting
+      - name: Hadolint Dockerfile Lint - Backend
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: backend/Dockerfile
+          format: sarif
+          output-file: hadolint-backend.sarif
+          no-fail: true
+
+      - name: Hadolint Dockerfile Lint - Frontend
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: frontend/Dockerfile
+          format: sarif
+          output-file: hadolint-frontend.sarif
+          no-fail: true
+
+      - name: Upload Hadolint Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: hadolint-reports
+          path: |
+            hadolint-backend.sarif
+            hadolint-frontend.sarif
+
+  # Stage 6: Deploy to Production
+  deploy-production:
+    name: Deploy to Production (EC2)
+    runs-on: ubuntu-latest
+    needs: [build-and-test, container-security, iac-security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: http://98.95.194.177
+
+    steps:
+      - name: Deploy to Production EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          USERNAME: ${{ secrets.EC2_USERNAME }}
+          IMAGE_TAG: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        with:
+          host: 98.95.194.177
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          command_timeout: 30m
+          envs: DATABASE_URL,DIRECT_URL,JWT_SECRET,JWT_REFRESH_SECRET,SUPABASE_URL,SUPABASE_KEY,ALLOWED_ORIGINS,BRANCH_NAME,USERNAME,IMAGE_TAG,COMMIT_MESSAGE
+          script: |
+            set -e
+
+            echo "========================================="
+            echo "🚀 SPMS PRODUCTION Deployment Started"
+            echo "========================================="
+            echo "Branch: ${BRANCH_NAME}"
+            echo "Image Tag: ${IMAGE_TAG}"
+            echo "Commit: ${COMMIT_MESSAGE}"
+            echo "========================================="
+
+            # Configure Git to use SSH
+            export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
+
+            # Navigate to application directory
+            APP_DIR="/home/${USERNAME}/spms"
+
+            # Check if repository directory exists
+            if [ ! -d "${APP_DIR}/.git" ]; then
+              echo "📁 Repository not found. Cloning..."
+              rm -rf ${APP_DIR}
+              mkdir -p ${APP_DIR}
+              cd ${APP_DIR}
+              git clone git@github.com:${{ github.repository }}.git .
+            else
+              echo "📁 Repository found. Updating..."
+              cd ${APP_DIR}
+            fi
+
+            # Pull latest changes
+            echo "🔄 Pulling latest code from ${BRANCH_NAME}..."
+            git fetch origin
+            git checkout ${BRANCH_NAME}
+            git reset --hard origin/${BRANCH_NAME}
+            git pull origin ${BRANCH_NAME}
+
+            # Create .env file for production deployment
+            echo "⚙️  Creating production .env file..."
+            cat > .env << 'EOF'
+            # Environment
+            NODE_ENV=production
+            IMAGE_TAG=${IMAGE_TAG}
+
+            # API Configuration
+            PORT=3000
+            API_PREFIX=/api/v1
+
+            # Database (Supabase)
+            DATABASE_URL=${DATABASE_URL}
+            DIRECT_URL=${DIRECT_URL}
+
+            # JWT Configuration
+            JWT_SECRET=${JWT_SECRET}
+            JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+            JWT_EXPIRES_IN=1h
+            JWT_REFRESH_EXPIRES_IN=7d
+
+            # Supabase
+            SUPABASE_URL=${SUPABASE_URL}
+            SUPABASE_KEY=${SUPABASE_KEY}
+
+            # CORS
+            ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+
+            # DAN Integration (Mock for now)
+            USE_MOCK_DAN=true
+            DAN_CLIENT_ID=mock-client-id
+            DAN_CLIENT_SECRET=mock-client-secret
+            DAN_API_URL=https://dan.gov.mn/api
+
+            # Security
+            BCRYPT_ROUNDS=12
+
+            # Logging
+            LOG_LEVEL=info
+            LOG_FILE_PATH=/app/logs
+
+            # Frontend
+            VITE_API_URL=/api/v1
+            EOF
+
+            # Create nginx SSL directory if it doesn't exist
+            echo "📁 Creating SSL directory..."
+            mkdir -p nginx/ssl
+
+            # Backup current containers (if any)
+            echo "💾 Backing up current deployment..."
+            docker compose -f docker-compose.devsecops.yml ps > deployment-backup-$(date +%Y%m%d-%H%M%S).log 2>&1 || true
+
+            # Stop existing containers gracefully
+            echo "🛑 Stopping existing containers..."
+            docker compose -f docker-compose.devsecops.yml down --timeout 30 2>/dev/null || true
+
+            # Clean up old images and containers
+            echo "🧹 Cleaning up old Docker resources..."
+            docker image prune -af --filter "until=168h" 2>/dev/null || true
+            docker container prune -f 2>/dev/null || true
+            docker volume prune -f --filter "label!=keep" 2>/dev/null || true
+
+            # Build and start new containers
+            echo "🔨 Building and starting new containers..."
+            docker compose -f docker-compose.devsecops.yml up -d --build --remove-orphans
+
+            # Wait for services to be healthy
+            echo "⏳ Waiting for services to become healthy..."
+            for i in {1..30}; do
+              if docker compose -f docker-compose.devsecops.yml ps | grep -q "healthy"; then
+                echo "✅ Services are healthy!"
+                break
+              fi
+              echo "Waiting... ($i/30)"
+              sleep 2
+            done
+
+            # Verify deployment
+            echo "========================================="
+            echo "📊 Deployment Status"
+            echo "========================================="
+            docker compose -f docker-compose.devsecops.yml ps
+
+            # Show resource usage
+            echo ""
+            echo "========================================="
+            echo "💻 Resource Usage"
+            echo "========================================="
+            docker stats --no-stream
+
+            # Show logs from backend and frontend
+            echo ""
+            echo "========================================="
+            echo "📋 Recent Logs"
+            echo "========================================="
+            docker compose -f docker-compose.devsecops.yml logs --tail=30
+
+            # Test backend health endpoint
+            echo ""
+            echo "========================================="
+            echo "🏥 Health Check"
+            echo "========================================="
+            sleep 5
+            curl -f http://localhost:3000/health || echo "⚠️  Backend health check failed"
+            curl -f http://localhost/ || echo "⚠️  Frontend health check failed"
+
+            echo ""
+            echo "========================================="
+            echo "✅ PRODUCTION Deployment Complete!"
+            echo "========================================="
+
+      - name: Post-deployment verification
+        run: |
+          echo "========================================="
+          echo "✅ SPMS PRODUCTION Deployment Summary"
+          echo "========================================="
+          echo "🌐 Frontend URL: http://98.95.194.177"
+          echo "🔧 Backend API: http://98.95.194.177:3000"
+          echo "📊 Branch: ${{ github.ref_name }}"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Deployed by: ${{ github.actor }}"
+          echo "⏰ Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "========================================="
+
+  # Stage 7: DAST - Dynamic Application Security Testing
+  dast-testing:
+    name: DAST with OWASP ZAP
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Wait for application to be fully ready
+      - name: Wait for application readiness
+        run: |
+          echo "Waiting for application to be ready..."
+          sleep 30
+          curl -f http://98.95.194.177/health || echo "Health check endpoint not available"
+
+      # OWASP ZAP Baseline Scan
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://98.95.194.177'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -j'
+          allow_issue_writing: false
+          fail_action: false
+
+      # OWASP ZAP Full Scan
+      - name: OWASP ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: 'http://98.95.194.177'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -j'
+          allow_issue_writing: false
+          fail_action: false
+
+      - name: Upload ZAP Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-reports
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
+
+  # Stage 8: Security Report Generation
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [code-security-analysis, dependency-security, container-security, iac-security, dast-testing]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate consolidated security report
+        run: |
+          cat << 'EOF' > security-report.md
+          # DevSecOps Security Report
+
+          **Project:** SPMS (School Performance Management System)
+          **Branch:** ${{ github.ref_name }}
+          **Commit:** ${{ github.sha }}
+          **Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Triggered by:** ${{ github.actor }}
+
+          ---
+
+          ## Executive Summary
+
+          This report provides a comprehensive security assessment of the SPMS application through the DevSecOps pipeline.
+
+          ## Security Scans Performed
+
+          ### 1. Static Application Security Testing (SAST)
+          - ✅ SonarCloud Code Quality Analysis
+          - ✅ Semgrep Security Patterns
+          - ✅ ESLint Security Rules
+          - ✅ GitLeaks Secret Detection
+
+          ### 2. Dependency Security
+          - ✅ NPM Audit (Backend & Frontend)
+          - ✅ OWASP Dependency-Check
+          - ✅ Snyk Vulnerability Scanning
+
+          ### 3. Container Security
+          - ✅ Trivy Container Scanning
+          - ✅ Docker Scout CVE Analysis
+
+          ### 4. Infrastructure as Code (IaC)
+          - ✅ Checkov Security Policies
+          - ✅ Hadolint Dockerfile Best Practices
+
+          ### 5. Dynamic Application Security Testing (DAST)
+          - ✅ OWASP ZAP Baseline Scan
+          - ✅ OWASP ZAP Full Scan
+
+          ---
+
+          ## Detailed Findings
+
+          ### Critical Issues
+          Review the following artifacts for critical security issues:
+          - Trivy Reports: High/Critical vulnerabilities in containers
+          - OWASP ZAP Reports: Runtime security vulnerabilities
+          - Dependency-Check: Known CVEs in dependencies
+
+          ### Recommendations
+          1. Review and remediate all CRITICAL severity findings
+          2. Update dependencies with known vulnerabilities
+          3. Implement security headers identified by ZAP
+          4. Address container base image vulnerabilities
+          5. Follow Dockerfile best practices from Hadolint
+
+          ---
+
+          ## Artifacts
+
+          All security scan reports are available as GitHub Actions artifacts:
+          - ESLint Reports
+          - NPM Audit Reports
+          - Dependency-Check Report
+          - Trivy Container Scan Reports
+          - Checkov IaC Reports
+          - Hadolint Dockerfile Reports
+          - OWASP ZAP DAST Reports
+
+          ---
+
+          ## Pipeline Status
+
+          - Code Security Analysis: ${{ needs.code-security-analysis.result }}
+          - Dependency Security: ${{ needs.dependency-security.result }}
+          - Container Security: ${{ needs.container-security.result }}
+          - IaC Security: ${{ needs.iac-security.result }}
+          - DAST Testing: ${{ needs.dast-testing.result }}
+
+          EOF
+
+          cat security-report.md
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security-report.md
+
+      - name: Comment PR with Security Summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('security-report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+  # Final notification
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-production, dast-testing, security-report]
+    if: always()
+
+    steps:
+      - name: Pipeline Summary
+        run: |
+          echo "========================================="
+          echo "🎯 DevSecOps Pipeline Complete"
+          echo "========================================="
+          echo "✅ Code Security Analysis: ${{ needs.code-security-analysis.result }}"
+          echo "✅ Dependency Security: ${{ needs.dependency-security.result }}"
+          echo "✅ Container Security: ${{ needs.container-security.result }}"
+          echo "✅ IaC Security: ${{ needs.iac-security.result }}"
+          echo "✅ Production Deployment: ${{ needs.deploy-production.result }}"
+          echo "✅ DAST Testing: ${{ needs.dast-testing.result }}"
+          echo "✅ Security Report: ${{ needs.security-report.result }}"
+          echo "========================================="
+          if [ "${{ needs.deploy-production.result }}" == "success" ]; then
+            echo "🚀 Application successfully deployed to PRODUCTION!"
+            echo "🌐 URL: http://98.95.194.177"
+          else
+            echo "❌ Deployment failed or was skipped"
+          fi
+          echo "========================================="

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!--
+    This file is used to suppress false positives and accepted risks in OWASP Dependency-Check
+
+    Example suppressions:
+
+    1. Suppress by CVE:
+    <suppress>
+        <notes>False positive - CVE does not apply to our usage</notes>
+        <cve>CVE-2021-12345</cve>
+    </suppress>
+
+    2. Suppress by package:
+    <suppress>
+        <notes>Risk accepted - Package is only used in development</notes>
+        <packageUrl regex="true">^pkg:npm/example\-package@.*$</packageUrl>
+    </suppress>
+
+    3. Suppress by file path:
+    <suppress>
+        <notes>Test dependency - not in production</notes>
+        <filePath regex="true">.*[\\/]test[\\/].*</filePath>
+    </suppress>
+    -->
+
+    <!-- Add your project-specific suppressions below -->
+
+    <!-- Example: Suppress development dependencies -->
+    <!--
+    <suppress>
+        <notes>Development dependency - not deployed to production</notes>
+        <packageUrl regex="true">^pkg:npm/.*@.*$</packageUrl>
+        <vulnerabilityName>CVE-2021-XXXXX</vulnerabilityName>
+    </suppress>
+    -->
+
+</suppressions>

@@ -1,0 +1,101 @@
+# ZAP Scanning Rules Configuration
+# Format: rule_id	threshold	[example URL]
+# Thresholds: IGNORE, INFO, WARN, FAIL
+
+# Passive Scan Rules
+10010	WARN	# Cookie No HttpOnly Flag
+10011	WARN	# Cookie Without Secure Flag
+10015	WARN	# Incomplete or No Cache-control and Pragma HTTP Header Set
+10017	WARN	# Cross-Domain JavaScript Source File Inclusion
+10019	WARN	# Content-Type Header Missing
+10020	WARN	# X-Frame-Options Header Not Set
+10021	WARN	# X-Content-Type-Options Header Missing
+10023	INFO	# Information Disclosure - Debug Error Messages
+10024	INFO	# Information Disclosure - Sensitive Information in URL
+10025	INFO	# Information Disclosure - Sensitive Information in HTTP Referrer Header
+10026	WARN	# HTTP Parameter Override
+10027	INFO	# Information Disclosure - Suspicious Comments
+10032	INFO	# Viewstate without MAC Signature
+10035	WARN	# Strict-Transport-Security Header Not Set
+10036	WARN	# HTTP Server Response Header
+10037	WARN	# Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s)
+10038	WARN	# Content Security Policy (CSP) Header Not Set
+10040	WARN	# Secure Pages Include Mixed Content
+10041	WARN	# HTTP to HTTPS Insecure Transition in Form Post
+10042	WARN	# HTTPS to HTTP Insecure Transition in Form Post
+10043	WARN	# User Controllable JavaScript Event (XSS)
+10044	WARN	# Big Redirect Detected (Potential Sensitive Information Leak)
+10045	WARN	# Source Code Disclosure - /WEB-INF folder
+10047	WARN	# HTTPS Content Available via HTTP
+10048	INFO	# Remote Code Execution - Shell Shock
+10049	WARN	# Content Cacheability
+10050	WARN	# Retrieved from Cache
+10052	WARN	# X-ChromeLogger-Data (XCOLD) Header Information Leak
+10054	INFO	# Cookie Without SameSite Attribute
+10055	WARN	# CSP Scanner
+10056	WARN	# X-Debug-Token Information Leak
+10057	WARN	# Username Hash Found
+10061	WARN	# X-AspNet-Version Response Header
+10062	WARN	# PII Disclosure
+10063	WARN	# Permissions Policy Header Not Set
+10096	INFO	# Timestamp Disclosure
+10097	INFO	# Hash Disclosure
+10098	INFO	# Cross-Domain Misconfiguration
+10099	INFO	# Source Code Disclosure
+10103	WARN	# Weak Authentication Method
+10104	WARN	# User Agent Fuzzer
+10105	WARN	# Weak HTTP Method
+
+# Active Scan Rules
+0	WARN	# Directory Browsing
+6	WARN	# Path Traversal
+7	WARN	# Remote File Inclusion
+20012	WARN	# Anti-CSRF Tokens Check
+20014	WARN	# HTTP Parameter Pollution
+20015	WARN	# Heartbleed OpenSSL Vulnerability
+20016	WARN	# Cross-Domain Misconfiguration
+20017	WARN	# Source Code Disclosure - CVE-2012-1823
+20018	WARN	# Remote Code Execution - CVE-2012-1823
+20019	WARN	# External Redirect
+30001	WARN	# Buffer Overflow
+30002	WARN	# Format String Error
+30003	WARN	# Integer Overflow Error
+40003	WARN	# CRLF Injection
+40008	WARN	# Parameter Tampering
+40009	WARN	# Server Side Include
+40012	WARN	# Cross Site Scripting (Reflected)
+40013	WARN	# Session Fixation
+40014	WARN	# Cross Site Scripting (Persistent)
+40016	WARN	# Cross Site Scripting (Persistent) - Prime
+40017	WARN	# Cross Site Scripting (Persistent) - Spider
+40018	WARN	# SQL Injection
+40019	WARN	# SQL Injection - MySQL
+40020	WARN	# SQL Injection - Hypersonic SQL
+40021	WARN	# SQL Injection - Oracle
+40022	WARN	# SQL Injection - PostgreSQL
+40023	WARN	# Possible Username Enumeration
+40024	WARN	# SQL Injection - SQLite
+40025	WARN	# Proxy Disclosure
+40026	WARN	# Cross Site Scripting (DOM Based)
+40027	WARN	# SQL Injection - MsSQL
+40028	WARN	# ELMAH Information Leak
+40029	WARN	# Trace.axd Information Leak
+90001	WARN	# Insecure JSF ViewState
+90011	WARN	# Charset Mismatch
+90018	WARN	# SQL Injection - Blind - Boolean Based
+90019	WARN	# Code Injection
+90020	WARN	# Command Injection
+90021	WARN	# XPath Injection
+90022	WARN	# Application Error Disclosure
+90023	WARN	# XML External Entity Attack
+90024	WARN	# Generic Padding Oracle
+90025	WARN	# Expression Language Injection
+90026	WARN	# SOAP Action Spoofing
+90027	WARN	# Cookie Slack Detector
+90028	WARN	# Insecure HTTP Method
+90029	WARN	# ELMAH Information Leak
+90030	WARN	# WSDL File Detection
+90033	WARN	# Loosely Scoped Cookie
+
+# False positive handling - Adjust as needed for your application
+# Example: 10010	IGNORE	http://example.com/specific-page
