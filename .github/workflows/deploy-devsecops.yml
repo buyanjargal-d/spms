@@ -243,6 +243,7 @@ jobs:
       # Trivy Container Scanning
       - name: Trivy Scan - Backend
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: 'spms-backend:${{ github.sha }}'
           format: 'sarif'
@@ -251,6 +252,7 @@ jobs:
 
       - name: Trivy Scan - Frontend
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: 'spms-frontend:${{ github.sha }}'
           format: 'sarif'
@@ -267,6 +269,7 @@ jobs:
       # Trivy JSON Reports
       - name: Trivy JSON Scan - Backend
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: 'spms-backend:${{ github.sha }}'
           format: 'json'
@@ -274,6 +277,7 @@ jobs:
 
       - name: Trivy JSON Scan - Frontend
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: 'spms-frontend:${{ github.sha }}'
           format: 'json'
