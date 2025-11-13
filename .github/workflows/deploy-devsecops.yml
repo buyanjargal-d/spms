@@ -101,6 +101,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      # Install dependencies for proper analysis
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
 
       # NPM Audit
       - name: NPM Audit - Backend
@@ -116,6 +129,11 @@ jobs:
           npm audit --audit-level=moderate || echo "Frontend has vulnerabilities"
 
       # Snyk Security Scan
+      # NOTE: Requires SNYK_TOKEN secret to be configured in GitHub repository settings
+      # To set up:
+      #   1. Create a Snyk account at https://snyk.io/
+      #   2. Generate an API token from your Snyk account settings
+      #   3. Add the token as SNYK_TOKEN in GitHub Settings > Secrets and variables > Actions
       - name: Snyk Security Scan
         uses: snyk/actions/node@master
         continue-on-error: true
@@ -306,6 +324,7 @@ jobs:
           output_file_path: console,checkov-report.json,checkov-report.sarif
           download_external_modules: true
           soft_fail: true
+          skip_framework: ""
 
       - name: Upload Checkov Reports
         uses: actions/upload-artifact@v4
