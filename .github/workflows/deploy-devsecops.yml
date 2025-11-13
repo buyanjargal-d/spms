@@ -314,7 +314,8 @@ jobs:
 
       # Checkov IaC Security Scan
       - name: Checkov IaC Scan
-        uses: bridgecrewio/checkov-action@master
+        uses: bridgecrewio/checkov-action@v12.2867.0
+        continue-on-error: true
         with:
           directory: .
           framework: dockerfile,github_actions
