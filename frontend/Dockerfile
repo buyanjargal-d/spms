@@ -1,7 +1,7 @@
 # Multi-stage build for React/Vite frontend
 
 # Stage 1: Build the application
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 # Build argument for API URL
 ARG VITE_API_URL=/api/v1
