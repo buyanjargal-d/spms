@@ -36,15 +36,13 @@ jobs:
             frontend/package-lock.json
 
       # SonarQube/SonarCloud Analysis
+      # NOTE: The sonar-project.properties file contains the project key and organization
+      # Alternatively, set SONAR_PROJECT_KEY and SONAR_ORGANIZATION as GitHub secrets
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
 
       # Secrets Scanning with GitLeaks
       - name: GitLeaks Secret Scan
@@ -324,7 +322,6 @@ jobs:
           output_file_path: console,checkov-report.json,checkov-report.sarif
           download_external_modules: true
           soft_fail: true
-          skip_framework: ""
 
       - name: Upload Checkov Reports
         uses: actions/upload-artifact@v4
