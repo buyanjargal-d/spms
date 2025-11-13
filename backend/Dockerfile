@@ -11,8 +11,10 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 
 # Install ALL dependencies (including devDependencies) for build
-RUN npm ci --prefer-offline --no-audit && \
-    npm cache clean --force
+# Use --no-optional to skip optional dependencies and save space
+RUN npm ci --prefer-offline --no-audit --no-optional && \
+    npm cache clean --force && \
+    rm -rf /root/.npm
 
 # Copy source code
 COPY . .

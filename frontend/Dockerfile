@@ -11,9 +11,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --prefer-offline --no-audit --only=production=false && \
-    npm cache clean --force
+# Install dependencies (skip optional to save space)
+RUN npm ci --prefer-offline --no-audit --only=production=false --no-optional && \
+    npm cache clean --force && \
+    rm -rf /root/.npm
 
 # Copy source code
 COPY . .

@@ -181,11 +181,30 @@ jobs:
             echo "🛑 Stopping existing containers..."
             docker compose -f docker-compose.prod.yml down --timeout 30 2>/dev/null || true
 
-            # Clean up old images and containers
-            echo "🧹 Cleaning up old Docker resources..."
-            docker image prune -af --filter "until=168h" 2>/dev/null || true
+            # Aggressive cleanup to free disk space
+            echo "🧹 Aggressively cleaning up Docker resources to free disk space..."
+
+            # Remove all stopped containers
             docker container prune -f 2>/dev/null || true
+
+            # Remove all dangling images
+            docker image prune -f 2>/dev/null || true
+
+            # Remove all unused images (not just dangling)
+            docker image prune -af 2>/dev/null || true
+
+            # Remove unused build cache
+            docker builder prune -af 2>/dev/null || true
+
+            # Remove unused volumes (except those with label=keep)
             docker volume prune -f --filter "label!=keep" 2>/dev/null || true
+
+            # Clean npm cache on host system
+            rm -rf ~/.npm 2>/dev/null || true
+
+            # Show disk space after cleanup
+            echo "📊 Disk space after cleanup:"
+            df -h / || true
 
             # Build and start new containers
             echo "🔨 Building and starting new containers..."
