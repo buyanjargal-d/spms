@@ -49,6 +49,14 @@ SECRET_VALUES.txt
 # Docker
 .dockerignore
 
+# SSL Certificates
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# Deployment logs and backups
+deployment-backup-*.log
+
 # Temporary files
 tmp/
 temp/

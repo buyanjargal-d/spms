@@ -7,8 +7,8 @@ services:
     container_name: spms-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
+      - "127.0.0.1:6379:6379"  # Only bind to localhost for security
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     healthcheck:
@@ -18,16 +18,22 @@ services:
       retries: 5
     networks:
       - spms-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Backend API (uses external Supabase database)
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: spms-backend:${IMAGE_TAG:-latest}
     container_name: spms-backend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"  # Only bind to localhost, accessed via nginx proxy
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
@@ -52,38 +58,57 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./backend/logs:/app/logs
+      - backend_logs:/app/logs
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health')"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     networks:
       - spms-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
 
-  # Frontend
+  # Frontend with Nginx
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-/api/v1}
+    image: spms-frontend:${IMAGE_TAG:-latest}
     container_name: spms-frontend
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"  # For SSL/TLS
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl:ro  # SSL certificates
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
-      timeout: 3s
+      timeout: 5s
       retries: 3
+      start_period: 10s
     networks:
       - spms-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
 
 volumes:
   redis_data:
+    driver: local
+  backend_logs:
     driver: local
 
 networks:

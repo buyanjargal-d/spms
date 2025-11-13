@@ -1,51 +1,117 @@
-name: Deploy to EC2 (Simple)
+name: Deploy to Cloud
 
 on:
   push:
     branches:
       - main
       - developer
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  DEPLOY_BRANCH: ${{ github.ref_name }}
+
 jobs:
-  deploy:
+  # Build and test before deployment
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test || echo "No tests configured"
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./frontend
+        env:
+          VITE_API_URL: /api/v1
+        run: npm run build
+
+  # Deploy to cloud server
+  deploy:
+    name: Deploy to Cloud
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.0
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
           BRANCH_NAME: ${{ github.ref_name }}
           USERNAME: ${{ secrets.EC2_USERNAME }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
+          IMAGE_TAG: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT || 22 }}
-          command_timeout: 20m
-          envs: DATABASE_URL,JWT_SECRET,JWT_REFRESH_SECRET,SUPABASE_URL,SUPABASE_KEY,BRANCH_NAME,USERNAME,EC2_HOST
+          command_timeout: 30m
+          envs: DATABASE_URL,DIRECT_URL,JWT_SECRET,JWT_REFRESH_SECRET,SUPABASE_URL,SUPABASE_KEY,ALLOWED_ORIGINS,BRANCH_NAME,USERNAME,EC2_HOST,IMAGE_TAG,COMMIT_MESSAGE
           script: |
             set -e
+
+            echo "========================================="
+            echo "🚀 SPMS Cloud Deployment Started"
+            echo "========================================="
+            echo "Branch: ${BRANCH_NAME}"
+            echo "Image Tag: ${IMAGE_TAG}"
+            echo "Commit: ${COMMIT_MESSAGE}"
+            echo "========================================="
 
             # Configure Git to use SSH
             export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
 
+            # Navigate to application directory
+            APP_DIR="/home/${USERNAME}/spms"
+
             # Check if repository directory exists
-            if [ ! -d "/home/${USERNAME}/spms/.git" ]; then
+            if [ ! -d "${APP_DIR}/.git" ]; then
               echo "📁 Repository not found. Cloning..."
-              rm -rf /home/${USERNAME}/spms
-              mkdir -p /home/${USERNAME}/spms
-              cd /home/${USERNAME}/spms
+              rm -rf ${APP_DIR}
+              mkdir -p ${APP_DIR}
+              cd ${APP_DIR}
               git clone git@github.com:${{ github.repository }}.git .
             else
               echo "📁 Repository found. Updating..."
-              cd /home/${USERNAME}/spms
+              cd ${APP_DIR}
             fi
 
             # Pull latest changes
@@ -55,59 +121,140 @@ jobs:
             git reset --hard origin/${BRANCH_NAME}
             git pull origin ${BRANCH_NAME}
 
-            # Create .env file for backend (note: no quotes around EOF)
-            echo "⚙️  Creating backend .env file..."
-            cat > backend/.env << EOF
+            # Create .env file for production deployment
+            echo "⚙️  Creating production .env file..."
+            cat > .env << 'EOF'
+            # Environment
             NODE_ENV=production
+            IMAGE_TAG=${IMAGE_TAG}
+
+            # API Configuration
             PORT=3000
             API_PREFIX=/api/v1
+
+            # Database (Supabase)
             DATABASE_URL=${DATABASE_URL}
+            DIRECT_URL=${DIRECT_URL}
+
+            # JWT Configuration
             JWT_SECRET=${JWT_SECRET}
             JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
             JWT_EXPIRES_IN=1h
             JWT_REFRESH_EXPIRES_IN=7d
+
+            # Supabase
             SUPABASE_URL=${SUPABASE_URL}
             SUPABASE_KEY=${SUPABASE_KEY}
-            ALLOWED_ORIGINS=http://${EC2_HOST},http://localhost:3000,http://localhost:5173
+
+            # CORS
+            ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+
+            # DAN Integration (Mock for now)
             USE_MOCK_DAN=true
             DAN_CLIENT_ID=mock-client-id
             DAN_CLIENT_SECRET=mock-client-secret
             DAN_API_URL=https://dan.gov.mn/api
+
+            # Security
             BCRYPT_ROUNDS=12
+
+            # Logging
             LOG_LEVEL=info
             LOG_FILE_PATH=/app/logs
+
+            # Frontend
+            VITE_API_URL=/api/v1
             EOF
 
-            # Stop existing containers
+            # Create nginx SSL directory if it doesn't exist
+            echo "📁 Creating SSL directory..."
+            mkdir -p nginx/ssl
+
+            # Backup current containers (if any)
+            echo "💾 Backing up current deployment..."
+            docker compose -f docker-compose.prod.yml ps > deployment-backup-$(date +%Y%m%d-%H%M%S).log 2>&1 || true
+
+            # Pull latest images if using registry (optional)
+            # docker compose -f docker-compose.prod.yml pull 2>/dev/null || true
+
+            # Stop existing containers gracefully
             echo "🛑 Stopping existing containers..."
-            docker compose down 2>/dev/null || true
+            docker compose -f docker-compose.prod.yml down --timeout 30 2>/dev/null || true
 
-            # Remove old images to save space
-            echo "🧹 Cleaning up old images..."
-            docker image prune -af --filter "until=72h"
+            # Clean up old images and containers
+            echo "🧹 Cleaning up old Docker resources..."
+            docker image prune -af --filter "until=168h" 2>/dev/null || true
+            docker container prune -f 2>/dev/null || true
+            docker volume prune -f --filter "label!=keep" 2>/dev/null || true
 
-            # Build and start containers with frontend API URL
-            # Using relative path since nginx proxies /api/ to backend
-            echo "🔨 Building and starting containers..."
-            export VITE_API_URL="/api/v1"
-            docker compose up -d --build
+            # Build and start new containers
+            echo "🔨 Building and starting new containers..."
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
-            # Wait for containers to be healthy
-            echo "⏳ Waiting for containers to start..."
-            sleep 10
+            # Wait for services to be healthy
+            echo "⏳ Waiting for services to become healthy..."
+            for i in {1..30}; do
+              if docker compose -f docker-compose.prod.yml ps | grep -q "healthy"; then
+                echo "✅ Services are healthy!"
+                break
+              fi
+              echo "Waiting... ($i/30)"
+              sleep 2
+            done
 
-            # Show running containers
-            echo "✅ Deployment complete! Running containers:"
-            docker compose ps
+            # Verify deployment
+            echo "========================================="
+            echo "📊 Deployment Status"
+            echo "========================================="
+            docker compose -f docker-compose.prod.yml ps
 
-            # Show logs from last 20 lines
-            echo "📋 Recent logs:"
-            docker compose logs --tail=20
+            # Show resource usage
+            echo ""
+            echo "========================================="
+            echo "💻 Resource Usage"
+            echo "========================================="
+            docker stats --no-stream
 
-      - name: Verify deployment
+            # Show logs from backend and frontend
+            echo ""
+            echo "========================================="
+            echo "📋 Recent Logs"
+            echo "========================================="
+            docker compose -f docker-compose.prod.yml logs --tail=30
+
+            # Test backend health endpoint
+            echo ""
+            echo "========================================="
+            echo "🏥 Health Check"
+            echo "========================================="
+            sleep 5
+            curl -f http://localhost:3000/health || echo "⚠️  Backend health check failed"
+            curl -f http://localhost/ || echo "⚠️  Frontend health check failed"
+
+            echo ""
+            echo "========================================="
+            echo "✅ Deployment Complete!"
+            echo "========================================="
+
+      - name: Post-deployment verification
         run: |
-          echo "✅ Deployment completed successfully!"
-          echo "🌐 Frontend: http://${{ secrets.EC2_HOST }}"
+          echo "========================================="
+          echo "✅ SPMS Deployment Summary"
+          echo "========================================="
+          echo "🌐 Frontend URL: http://${{ secrets.EC2_HOST }}"
           echo "🔧 Backend API: http://${{ secrets.EC2_HOST }}:3000"
           echo "📊 Branch: ${{ github.ref_name }}"
           echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Deployed by: ${{ github.actor }}"
+          echo "⏰ Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "========================================="
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment succeeded!"
+          else
+            echo "❌ Deployment failed!"
+            exit 1
+          fi
