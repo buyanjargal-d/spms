@@ -1,12 +1,9 @@
-# Multi-stage build for React/Vite frontend
+# Multi-stage build for NestJS backend
 
 # Stage 1: Build the application
 FROM node:20-slim AS builder
 
-# Build argument for API URL
-ARG VITE_API_URL=/api/v1
-
-# Install build dependencies for native modules
+# Install build dependencies for Debian/Ubuntu
 RUN apt-get update && \
     apt-get install -y python3 make g++ && \
     rm -rf /var/lib/apt/lists/*
@@ -16,44 +13,54 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with proper flags for native modules
+# Install dependencies
 RUN npm ci --prefer-offline --no-audit && \
     npm cache clean --force
 
 # Copy source code
 COPY . .
 
-# Build the application with environment variable
-ENV VITE_API_URL=$VITE_API_URL
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the application
 RUN npm run build
 
-# Stage 2: Serve with Nginx
-FROM nginx:alpine
+# Stage 2: Production
+FROM node:20-slim
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y openssl curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Create nginx user if doesn't exist
-RUN addgroup -g 101 -S nginx 2>/dev/null || true && \
-    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx 2>/dev/null || true
+WORKDIR /app
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy package files
+COPY package*.json ./
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY security-headers.conf /etc/nginx/conf.d/security-headers.conf
+# Install production dependencies only
+RUN npm ci --prefer-offline --no-audit --omit=dev && \
+    npm cache clean --force
 
-# Set proper permissions
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma ./prisma
 
-# Expose port 80
-EXPOSE 80
+# Create non-root user
+RUN groupadd -r nodejs && \
+    useradd -r -g nodejs nodejs && \
+    chown -R nodejs:nodejs /app
 
-# Health check using curl
+USER nodejs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost/ || exit 1
+  CMD curl -f http://localhost:3000/health || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application
+CMD ["node", "dist/main"]
