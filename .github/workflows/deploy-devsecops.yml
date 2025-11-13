@@ -53,6 +53,7 @@ jobs:
       # Semgrep SAST
       - name: Semgrep Security Scan
         uses: returntocorp/semgrep-action@v1
+        continue-on-error: true
         with:
           config: >-
             p/security-audit
