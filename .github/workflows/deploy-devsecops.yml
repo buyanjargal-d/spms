@@ -261,6 +261,8 @@ jobs:
 
       - name: Upload Trivy Reports
         uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
+        if: always()
         with:
           sarif_file: |
             trivy-backend-report.sarif
@@ -493,6 +495,10 @@ jobs:
             docker image prune -af --filter "until=168h" 2>/dev/null || true
             docker container prune -f 2>/dev/null || true
             docker volume prune -f --filter "label!=keep" 2>/dev/null || true
+
+            # Aggressive cleanup to free storage space
+            echo "🗑️  Running docker system prune to free up storage..."
+            docker system prune -af --volumes 2>/dev/null || true
 
             # Build and start new containers
             echo "🔨 Building and starting new containers..."
