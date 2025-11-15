@@ -1,4 +1,4 @@
-# Multi-stage build for NestJS backend
+# Multi-stage build for React/Vite frontend
 
 # Stage 1: Build the application
 FROM node:20-slim AS builder
@@ -20,47 +20,43 @@ RUN npm ci --prefer-offline --no-audit && \
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+# Build argument for API URL
+ARG VITE_API_URL=/api/v1
+ENV VITE_API_URL=$VITE_API_URL
 
 # Build the application
 RUN npm run build
 
-# Stage 2: Production
-FROM node:20-slim
+# Stage 2: Production with nginx
+FROM nginx:1.25-alpine
 
-# Install runtime dependencies
-RUN apt-get update && \
-    apt-get install -y openssl curl && \
-    rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install production dependencies only
-RUN npm ci --prefer-offline --no-audit --omit=dev && \
-    npm cache clean --force
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY security-headers.conf /etc/nginx/security-headers.conf
 
 # Copy built application from builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create non-root user
-RUN groupadd -r nodejs && \
-    useradd -r -g nodejs nodejs && \
-    chown -R nodejs:nodejs /app
+RUN addgroup -g 101 -S nginx || true && \
+    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
 
-USER nodejs
+# Set proper permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid
+
+USER nginx
 
 # Expose port
-EXPOSE 3000
+EXPOSE 80
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
 
-# Start the application
-CMD ["node", "dist/main"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
