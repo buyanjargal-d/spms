@@ -1,55 +1,62 @@
 # Multi-stage build for React/Vite frontend
 
 # Stage 1: Build the application
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
-# Build argument for API URL
-ARG VITE_API_URL=/api/v1
+# Install build dependencies for Debian/Ubuntu
+RUN apt-get update && \
+    apt-get install -y python3 make g++ && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (skip optional to save space)
-RUN npm ci --prefer-offline --no-audit --only=production=false --no-optional && \
-    npm cache clean --force && \
-    rm -rf /root/.npm
+# Install dependencies
+RUN npm ci --prefer-offline --no-audit && \
+    npm cache clean --force
 
 # Copy source code
 COPY . .
 
-# Build the application with environment variable
+# Build argument for API URL
+ARG VITE_API_URL=/api/v1
 ENV VITE_API_URL=$VITE_API_URL
+
+# Build the application
 RUN npm run build
 
-# Stage 2: Serve with Nginx
-FROM nginx:alpine
+# Stage 2: Production with nginx
+FROM nginx:1.25-alpine
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY security-headers.conf /etc/nginx/security-headers.conf
 
-# Create nginx user if doesn't exist
-RUN addgroup -g 101 -S nginx 2>/dev/null || true && \
-    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx 2>/dev/null || true
-
-# Copy built assets from builder stage
+# Copy built application from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY security-headers.conf /etc/nginx/conf.d/security-headers.conf
+# Create non-root user
+RUN addgroup -g 101 -S nginx || true && \
+    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
 
 # Set proper permissions
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid
 
-# Expose port 80
+USER nginx
+
+# Expose port
 EXPOSE 80
 
-# Health check using curl
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost/ || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
