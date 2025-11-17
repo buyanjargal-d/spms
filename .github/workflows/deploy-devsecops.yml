@@ -408,6 +408,40 @@ jobs:
             echo "Commit: ${COMMIT_MESSAGE}"
             echo "========================================="
 
+            # CRITICAL: Clean up Docker resources FIRST to free disk space
+            echo "🧹 Cleaning Docker system BEFORE git operations..."
+            echo "This ensures we have enough disk space for git operations..."
+
+            # Stop any running containers first
+            docker compose -f /home/${USERNAME}/spms/docker-compose.devsecops.yml down --timeout 30 2>/dev/null || true
+
+            # Aggressive cleanup to free storage space
+            docker system prune -af --volumes 2>/dev/null || true
+            docker image prune -af 2>/dev/null || true
+            docker container prune -f 2>/dev/null || true
+            docker volume prune -af 2>/dev/null || true
+            docker network prune -f 2>/dev/null || true
+            docker builder prune -af 2>/dev/null || true
+
+            # Clean up system temporary files and caches
+            echo "🧹 Cleaning system temporary files..."
+            rm -rf /tmp/* 2>/dev/null || true
+            rm -rf ~/.npm 2>/dev/null || true
+            rm -rf ~/.cache 2>/dev/null || true
+
+            # Clean up old Git repository logs and refs
+            if [ -d "/home/${USERNAME}/spms/.git" ]; then
+              echo "🧹 Cleaning Git repository..."
+              cd /home/${USERNAME}/spms
+              git gc --aggressive --prune=now 2>/dev/null || true
+              git reflog expire --expire=now --all 2>/dev/null || true
+            fi
+
+            # Show disk space after cleanup
+            echo "📊 Disk space after cleanup:"
+            df -h / | grep -E 'Filesystem|/$' || true
+            docker system df
+
             # Configure Git to use SSH
             export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
 
@@ -481,30 +515,6 @@ jobs:
             # Create nginx SSL directory if it doesn't exist
             echo "📁 Creating SSL directory..."
             mkdir -p nginx/ssl
-
-            # Backup current containers (if any)
-            echo "💾 Backing up current deployment..."
-            docker compose -f docker-compose.devsecops.yml ps > deployment-backup-$(date +%Y%m%d-%H%M%S).log 2>&1 || true
-
-            # Stop existing containers gracefully
-            echo "🛑 Stopping existing containers..."
-            docker compose -f docker-compose.devsecops.yml down --timeout 30 2>/dev/null || true
-
-            # Aggressive cleanup to free storage space before installation
-            echo "🧹 Cleaning Docker system (prune all unused resources)..."
-            echo "This ensures a clean state before deployment..."
-            docker system prune -af --volumes 2>/dev/null || true
-
-            # Additional cleanup for specific resources
-            echo "🗑️  Removing dangling images and unused containers..."
-            docker image prune -af 2>/dev/null || true
-            docker container prune -f 2>/dev/null || true
-            docker volume prune -af 2>/dev/null || true
-            docker network prune -f 2>/dev/null || true
-
-            # Verify cleanup results
-            echo "📊 Docker disk usage after cleanup:"
-            docker system df
 
             # Build and start new containers
             echo "🔨 Building and starting new containers..."
