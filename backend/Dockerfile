@@ -4,10 +4,11 @@ FROM node:20-slim AS builder
 # Set working directory
 WORKDIR /app
 
-# Install build dependencies for Debian
+# Install build dependencies for Debian with minimal space usage
 RUN apt-get update && \
-    apt-get install -y python3 make g++ && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends python3 make g++ && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy package files
 COPY package*.json ./
@@ -30,10 +31,11 @@ RUN npm prune --production
 # Stage 2: Production
 FROM node:20-slim
 
-# Install runtime dependencies for Debian
+# Install runtime dependencies for Debian with minimal space usage
 RUN apt-get update && \
-    apt-get install -y dumb-init curl && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends dumb-init curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /app
 

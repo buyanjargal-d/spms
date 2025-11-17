@@ -3,10 +3,11 @@
 # Stage 1: Build the application
 FROM node:20-slim AS builder
 
-# Install build dependencies for Debian/Ubuntu
+# Install build dependencies for Debian/Ubuntu with minimal space usage
 RUN apt-get update && \
-    apt-get install -y python3 make g++ && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends python3 make g++ && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /app
 

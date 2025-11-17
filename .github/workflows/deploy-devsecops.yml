@@ -409,25 +409,33 @@ jobs:
             echo "========================================="
 
             # CRITICAL: Clean up Docker resources FIRST to free disk space
-            echo "🧹 Cleaning Docker system BEFORE git operations..."
-            echo "This ensures we have enough disk space for git operations..."
+            echo "🧹 AGGRESSIVE CLEANUP - Freeing disk space on 16GB server..."
+            echo "This ensures we have enough disk space for operations..."
 
             # Stop any running containers first
             docker compose -f /home/${USERNAME}/spms/docker-compose.devsecops.yml down --timeout 30 2>/dev/null || true
 
-            # Aggressive cleanup to free storage space
-            docker system prune -af --volumes 2>/dev/null || true
-            docker image prune -af 2>/dev/null || true
-            docker container prune -f 2>/dev/null || true
-            docker volume prune -af 2>/dev/null || true
+            # Remove ALL Docker images, containers, volumes, networks
+            echo "🗑️  Removing ALL Docker resources..."
+            docker rm -f $(docker ps -aq) 2>/dev/null || true
+            docker rmi -f $(docker images -aq) 2>/dev/null || true
+            docker volume rm -f $(docker volume ls -q) 2>/dev/null || true
             docker network prune -f 2>/dev/null || true
+
+            # Docker system prune with all options
+            echo "🧹 Running docker system prune..."
+            docker system prune -af --volumes 2>/dev/null || true
             docker builder prune -af 2>/dev/null || true
 
             # Clean up system temporary files and caches
-            echo "🧹 Cleaning system temporary files..."
-            rm -rf /tmp/* 2>/dev/null || true
+            echo "🧹 Cleaning system files..."
+            sudo rm -rf /tmp/* 2>/dev/null || true
+            sudo rm -rf /var/tmp/* 2>/dev/null || true
             rm -rf ~/.npm 2>/dev/null || true
             rm -rf ~/.cache 2>/dev/null || true
+            sudo apt-get clean 2>/dev/null || true
+            sudo apt-get autoclean 2>/dev/null || true
+            sudo journalctl --vacuum-time=1d 2>/dev/null || true
 
             # Clean up old Git repository logs and refs
             if [ -d "/home/${USERNAME}/spms/.git" ]; then
@@ -438,9 +446,15 @@ jobs:
             fi
 
             # Show disk space after cleanup
-            echo "📊 Disk space after cleanup:"
-            df -h / | grep -E 'Filesystem|/$' || true
-            docker system df
+            echo ""
+            echo "========================================="
+            echo "📊 Disk Space After Cleanup"
+            echo "========================================="
+            df -h / | grep -E 'Filesystem|/$' || df -h /
+            echo ""
+            echo "Docker disk usage:"
+            docker system df || true
+            echo "========================================="
 
             # Configure Git to use SSH
             export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
