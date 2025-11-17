@@ -532,7 +532,11 @@ jobs:
 
             # Build and start new containers
             echo "🔨 Building and starting new containers..."
-            docker compose -f docker-compose.devsecops.yml up -d --build --remove-orphans
+            if ! docker compose -f docker-compose.devsecops.yml up -d --build --remove-orphans; then
+              echo "❌ Failed to start containers!"
+              docker compose -f docker-compose.devsecops.yml logs
+              exit 1
+            fi
 
             # Wait for services to be healthy
             echo "⏳ Waiting for services to become healthy..."
@@ -544,6 +548,18 @@ jobs:
               echo "Waiting... ($i/30)"
               sleep 2
             done
+
+            # Check if any containers exited
+            echo "🔍 Checking container status..."
+            if docker compose -f docker-compose.devsecops.yml ps | grep -i "exit"; then
+              echo "❌ Some containers have exited!"
+              echo "Container status:"
+              docker compose -f docker-compose.devsecops.yml ps
+              echo ""
+              echo "Container logs:"
+              docker compose -f docker-compose.devsecops.yml logs
+              exit 1
+            fi
 
             # Verify deployment
             echo "========================================="

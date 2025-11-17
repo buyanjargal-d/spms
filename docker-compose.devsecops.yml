@@ -1,11 +1,14 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database (disabled - using Supabase instead)
+  # To enable local postgres, run: docker compose --profile local-db up
   postgres:
     image: postgres:15-alpine
     container_name: spms-postgres-prod
     restart: unless-stopped
+    profiles:
+      - local-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -93,8 +96,6 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_secure_password}
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
@@ -135,7 +136,6 @@ services:
       - backend
     volumes:
       - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./nginx/logs:/var/log/nginx
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
