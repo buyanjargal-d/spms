@@ -71,6 +71,19 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      # Run tests with coverage BEFORE SonarCloud scan
+      - name: Run backend tests with coverage
+        working-directory: ./backend
+        run: npm test -- --coverage --passWithNoTests || true
+
+      - name: Install Vitest for frontend
+        working-directory: ./frontend
+        run: npm install --save-dev vitest @vitest/ui @testing-library/react @testing-library/jest-dom jsdom @vitest/coverage-v8
+
+      - name: Run frontend tests with coverage
+        working-directory: ./frontend
+        run: npm test || true
+
       # ESLint Security Analysis
       - name: Run ESLint Security Check
         run: |
