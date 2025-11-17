@@ -35,7 +35,29 @@ jobs:
             backend/package-lock.json
             frontend/package-lock.json
 
-      # SonarQube/SonarCloud Analysis
+      # Install dependencies for analysis
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      # Run tests with coverage BEFORE SonarCloud scan
+      - name: Run backend tests with coverage
+        working-directory: ./backend
+        run: npm test -- --coverage --passWithNoTests || true
+
+      - name: Install Vitest for frontend
+        working-directory: ./frontend
+        run: npm install --save-dev vitest @vitest/ui @testing-library/react @testing-library/jest-dom jsdom @vitest/coverage-v8
+
+      - name: Run frontend tests with coverage
+        working-directory: ./frontend
+        run: npm test || true
+
+      # SonarQube/SonarCloud Analysis - MUST run after tests to pick up coverage
       # NOTE: The sonar-project.properties file contains the project key and organization
       # Alternatively, set SONAR_PROJECT_KEY and SONAR_ORGANIZATION as GitHub secrets
       - name: SonarCloud Scan
@@ -61,28 +83,6 @@ jobs:
             p/nodejs
             p/typescript
             p/react
-
-      # Install dependencies for analysis
-      - name: Install backend dependencies
-        working-directory: ./backend
-        run: npm ci
-
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      # Run tests with coverage BEFORE SonarCloud scan
-      - name: Run backend tests with coverage
-        working-directory: ./backend
-        run: npm test -- --coverage --passWithNoTests || true
-
-      - name: Install Vitest for frontend
-        working-directory: ./frontend
-        run: npm install --save-dev vitest @vitest/ui @testing-library/react @testing-library/jest-dom jsdom @vitest/coverage-v8
-
-      - name: Run frontend tests with coverage
-        working-directory: ./frontend
-        run: npm test || true
 
       # ESLint Security Analysis
       - name: Run ESLint Security Check
