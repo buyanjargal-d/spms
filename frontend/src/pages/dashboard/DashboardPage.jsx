@@ -385,7 +385,11 @@ const DashboardPage = () => {
                     </td>
                     <td className="py-3 px-4">
                       <span className="text-sm text-gray-600">
-                        {pickup.student?.classId || '-'}
+                        {pickup.student?.class
+                          ? `${pickup.student.class.gradeLevel}-${pickup.student.class.section}`
+                          : pickup.student?.gradeLevel
+                          ? `${pickup.student.gradeLevel}-р анги`
+                          : '-'}
                       </span>
                     </td>
                     <td className="py-3 px-4">

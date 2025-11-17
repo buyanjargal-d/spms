@@ -23,6 +23,9 @@ import VerificationPage from './pages/guard/VerificationPage';
 import QueuePage from './pages/guard/QueuePage';
 import EmergencyPickupPage from './pages/guard/EmergencyPickupPage';
 
+// Teacher Pages
+import MyClassPage from './pages/teacher/MyClassPage';
+
 // Layout
 import DashboardLayout from './components/layout/DashboardLayout';
 import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
@@ -99,6 +102,14 @@ const AppRoutes = () => {
         />
 
         {/* Teacher and Admin routes */}
+        <Route
+          path="my-class"
+          element={
+            <RoleProtectedRoute allowedRoles={['teacher', 'admin']}>
+              <MyClassPage />
+            </RoleProtectedRoute>
+          }
+        />
         <Route
           path="pickup-requests"
           element={
