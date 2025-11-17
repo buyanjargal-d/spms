@@ -490,15 +490,21 @@ jobs:
             echo "🛑 Stopping existing containers..."
             docker compose -f docker-compose.devsecops.yml down --timeout 30 2>/dev/null || true
 
-            # Clean up old images and containers
-            echo "🧹 Cleaning up old Docker resources..."
-            docker image prune -af --filter "until=168h" 2>/dev/null || true
-            docker container prune -f 2>/dev/null || true
-            docker volume prune -f --filter "label!=keep" 2>/dev/null || true
-
-            # Aggressive cleanup to free storage space
-            echo "🗑️  Running docker system prune to free up storage..."
+            # Aggressive cleanup to free storage space before installation
+            echo "🧹 Cleaning Docker system (prune all unused resources)..."
+            echo "This ensures a clean state before deployment..."
             docker system prune -af --volumes 2>/dev/null || true
+
+            # Additional cleanup for specific resources
+            echo "🗑️  Removing dangling images and unused containers..."
+            docker image prune -af 2>/dev/null || true
+            docker container prune -f 2>/dev/null || true
+            docker volume prune -af 2>/dev/null || true
+            docker network prune -f 2>/dev/null || true
+
+            # Verify cleanup results
+            echo "📊 Docker disk usage after cleanup:"
+            docker system df
 
             # Build and start new containers
             echo "🔨 Building and starting new containers..."
