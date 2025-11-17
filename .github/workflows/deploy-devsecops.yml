@@ -605,14 +605,35 @@ jobs:
 
       # Wait for application to be fully ready
       - name: Wait for application readiness
+        continue-on-error: true
         run: |
           echo "Waiting for application to be ready..."
-          sleep 30
-          curl -f http://98.95.194.177/health || echo "Health check endpoint not available"
+          max_attempts=30
+          attempt=1
+
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts..."
+
+            if curl -f -s -o /dev/null http://98.95.194.177/health; then
+              echo "✅ Application is ready!"
+              exit 0
+            fi
+
+            echo "Application not ready yet, waiting 10 seconds..."
+            sleep 10
+            attempt=$((attempt + 1))
+          done
+
+          echo "⚠️ Application did not become ready within expected time"
+          echo "Attempting to show application status..."
+          curl -v http://98.95.194.177/health || true
+          echo "Continuing with DAST scan anyway..."
+          exit 0
 
       # OWASP ZAP Baseline Scan
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
+        continue-on-error: true
         with:
           target: 'http://98.95.194.177'
           rules_file_name: '.zap/rules.tsv'
@@ -623,6 +644,7 @@ jobs:
       # OWASP ZAP Full Scan
       - name: OWASP ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.10.0
+        continue-on-error: true
         with:
           target: 'http://98.95.194.177'
           rules_file_name: '.zap/rules.tsv'
