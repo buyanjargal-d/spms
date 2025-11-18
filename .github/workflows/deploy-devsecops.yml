@@ -45,9 +45,11 @@ jobs:
         run: npm ci
 
       # Run tests with coverage BEFORE SonarCloud scan
+      # Allow tests to fail but still generate coverage for SonarCloud
       - name: Run backend tests with coverage
         working-directory: ./backend
-        run: npm test -- --coverage --passWithNoTests || true
+        run: npm test -- --coverage --passWithNoTests || echo "Tests completed with errors, but coverage generated"
+        continue-on-error: true
 
       - name: Install Vitest for frontend
         working-directory: ./frontend
@@ -55,7 +57,8 @@ jobs:
 
       - name: Run frontend tests with coverage
         working-directory: ./frontend
-        run: npm test || true
+        run: npm test || echo "Frontend tests completed with errors, but coverage generated"
+        continue-on-error: true
 
       # SonarQube/SonarCloud Analysis - MUST run after tests to pick up coverage
       # NOTE: The sonar-project.properties file contains the project key and organization

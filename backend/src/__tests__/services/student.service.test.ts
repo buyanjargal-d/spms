@@ -28,18 +28,18 @@ describe('StudentService', () => {
     expect(typeof studentService.getStudentById).toBe('function');
   });
 
-  it('should have createStudent method', () => {
-    expect(studentService.createStudent).toBeDefined();
-    expect(typeof studentService.createStudent).toBe('function');
+  it('should have getStudentByCode method', () => {
+    expect(studentService.getStudentByCode).toBeDefined();
+    expect(typeof studentService.getStudentByCode).toBe('function');
   });
 
-  it('should have updateStudent method', () => {
-    expect(studentService.updateStudent).toBeDefined();
-    expect(typeof studentService.updateStudent).toBe('function');
+  it('should have getStudentGuardians method', () => {
+    expect(studentService.getStudentGuardians).toBeDefined();
+    expect(typeof studentService.getStudentGuardians).toBe('function');
   });
 
-  it('should have deleteStudent method', () => {
-    expect(studentService.deleteStudent).toBeDefined();
-    expect(typeof studentService.deleteStudent).toBe('function');
+  it('should have canUserPickupStudent method', () => {
+    expect(studentService.canUserPickupStudent).toBeDefined();
+    expect(typeof studentService.canUserPickupStudent).toBe('function');
   });
 });
