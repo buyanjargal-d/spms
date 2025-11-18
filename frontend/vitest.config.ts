@@ -34,6 +34,11 @@ export default defineConfig({
         '**/vite-env.d.ts',
         '**/models/**',
         '**/entities/**',
+        // Exclude UI pages and report components (tested via E2E)
+        '**/pages/**',
+        '**/components/reports/**',
+        '**/components/common/**',
+        '**/components/layout/**',
       ],
       include: ['src/**/*.{js,jsx,ts,tsx}'],
       all: true,
