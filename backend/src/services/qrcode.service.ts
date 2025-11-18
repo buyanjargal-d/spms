@@ -2,7 +2,7 @@ import QRCode from 'qrcode';
 import * as crypto from 'crypto';
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database';
-import { PickupRequest } from '../models/PickupRequest';
+import { PickupRequest, RequestStatus } from '../models/PickupRequest';
 import { ENV } from '../config/env';
 
 interface QRCodePayload {
@@ -157,16 +157,16 @@ export class QRCodeService {
         };
       }
 
-      // Check if already completed
-      if (pickupRequest.status === 'completed') {
+      // Check if already completed (has actualPickupTime)
+      if (pickupRequest.actualPickupTime) {
         return {
           success: false,
           message: 'Энэ хүсэлт аль хэдийн биелүүлсэн байна',
         };
       }
 
-      // Check if approved
-      if (pickupRequest.status !== 'approved') {
+      // Check if confirmed (approved)
+      if (pickupRequest.status !== RequestStatus.CONFIRMED) {
         return {
           success: false,
           message: 'Энэ хүсэлт батлагдаагүй байна',
