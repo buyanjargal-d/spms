@@ -245,7 +245,7 @@ export class ReportsService {
     });
 
     return Object.entries(weeks).map(([week, weekPickups]) => {
-      const completed = weekPickups.filter(p => p.status === RequestStatus.COMPLETED).length;
+      const completed = weekPickups.filter(p => p.actualPickupTime !== null && p.actualPickupTime !== undefined).length;
       const cancelled = weekPickups.filter(p => p.status === RequestStatus.CANCELLED).length;
 
       return {

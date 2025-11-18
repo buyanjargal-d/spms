@@ -198,7 +198,7 @@ export class GuardService {
   async getPickupQueue(_guardId: string): Promise<QueueItem[]> {
     try {
       const approvedPickups = await this.pickupRequestRepository.find({
-        where: { status: RequestStatus.APPROVED },
+        where: { status: RequestStatus.CONFIRMED },
         relations: ['student', 'requester'],
         order: { approvedAt: 'ASC' },
       });
@@ -258,7 +258,7 @@ export class GuardService {
         requesterId: guardId, // Guard is creating this
         requestType: RequestType.STANDARD, // Use STANDARD type for emergency
         requestedTime: new Date(),
-        status: RequestStatus.APPROVED, // Auto-approved for emergency
+        status: RequestStatus.CONFIRMED, // Auto-approved for emergency
         approvedAt: new Date(),
         approverId: guardId,
         emergencyPickupPerson: data.pickupPersonName,
@@ -311,7 +311,7 @@ export class GuardService {
 
       // Count pending approvals (awaiting verification)
       const pendingQueue = await this.pickupRequestRepository.count({
-        where: { status: RequestStatus.APPROVED },
+        where: { status: RequestStatus.CONFIRMED },
       });
 
       // Count emergency pickups today (using requiresAdminReview as emergency flag)

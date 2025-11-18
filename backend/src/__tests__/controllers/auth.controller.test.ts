@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthController } from '../../controllers/auth.controller';
+import { UserRole } from '../../models/User';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -16,12 +17,14 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('should return 400 when credentials are missing', async () => {
+    it('should return 401 when credentials are missing', async () => {
       mockRequest.body = {};
+      mockRequest.socket = { remoteAddress: '127.0.0.1' } as any;
+      mockRequest.headers = { 'user-agent': 'test-agent' };
 
       await authController.login(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalled();
     });
 
@@ -35,7 +38,16 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('should handle logout request', async () => {
-      mockRequest.user = { id: '123', role: 'admin' };
+      mockRequest.user = {
+        id: '123',
+        role: UserRole.ADMIN,
+        danId: 'admin001',
+        fullName: 'Test Admin',
+        isActive: true,
+        failedLoginAttempts: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as any;
 
       await authController.logout(mockRequest as Request, mockResponse as Response);
 

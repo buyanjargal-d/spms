@@ -1,6 +1,6 @@
 import { PickupService } from '../../services/pickup.service';
 import { AppDataSource } from '../../config/database';
-import { PickupRequest, RequestStatus, RequestType } from '../../models/PickupRequest';
+import { RequestStatus, RequestType } from '../../models/PickupRequest';
 import { GuestApprovalService } from '../../services/guestApproval.service';
 
 // Mock dependencies
@@ -119,7 +119,7 @@ describe('PickupService - New Changes', () => {
         status: RequestStatus.CONFIRMED,
       });
 
-      const result = await pickupService.approvePickupRequest('pickup-123');
+      const result = await pickupService.approvePickupRequest('pickup-123', 'teacher-123');
 
       expect(result.status).toBe(RequestStatus.CONFIRMED);
       expect(mockPickupRepository.save).toHaveBeenCalledWith(
@@ -139,7 +139,7 @@ describe('PickupService - New Changes', () => {
       mockPickupRepository.findOne.mockResolvedValue(mockRequest);
 
       await expect(
-        pickupService.approvePickupRequest('pickup-123')
+        pickupService.approvePickupRequest('pickup-123', 'teacher-123')
       ).rejects.toThrow('Only pending requests can be approved');
     });
   });
