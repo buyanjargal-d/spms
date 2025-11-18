@@ -304,7 +304,7 @@ export class AdminService {
     // Get pickup history
     const pickupHistory = await this.pickupRequestRepository.find({
       where: { studentId },
-      relations: ['requester', 'approver', 'completedByUser'],
+      relations: ['requester', 'approver', 'guard'],
       order: { createdAt: 'DESC' },
       take: 10,
     });

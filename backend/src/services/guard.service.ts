@@ -63,7 +63,7 @@ export class GuardService {
       }
 
       // Check if already completed
-      if (pickupRequest.status === RequestStatus.COMPLETED) {
+      if (pickupRequest.actualPickupTime) {
         return {
           success: false,
           message: 'Энэ хүсэлт аль хэдийн биелүүлсэн байна',
@@ -71,7 +71,7 @@ export class GuardService {
       }
 
       // Check if approved
-      if (pickupRequest.status !== RequestStatus.APPROVED) {
+      if (pickupRequest.status !== RequestStatus.CONFIRMED) {
         return {
           success: false,
           message: 'Энэ хүсэлт батлагдаагүй байна',
@@ -112,7 +112,7 @@ export class GuardService {
       const pickupRequest = await this.pickupRequestRepository.findOne({
         where: {
           studentId: studentId,
-          status: RequestStatus.APPROVED,
+          status: RequestStatus.CONFIRMED,
         },
         relations: ['student', 'requester', 'approver'],
         order: { approvedAt: 'DESC' },
@@ -164,7 +164,7 @@ export class GuardService {
         };
       }
 
-      if (pickupRequest.status !== RequestStatus.APPROVED) {
+      if (pickupRequest.status !== RequestStatus.CONFIRMED) {
         return {
           success: false,
           message: 'Зөвхөн батлагдсан хүсэлтийг биелүүлэх боломжтой',
@@ -172,7 +172,7 @@ export class GuardService {
       }
 
       // Update pickup request
-      pickupRequest.status = RequestStatus.COMPLETED;
+      // Status remains CONFIRMED (no separate "completed" status)
       pickupRequest.completedAt = new Date();
       pickupRequest.completedBy = guardId;
       pickupRequest.photoVerified = photoVerified;
@@ -301,7 +301,7 @@ export class GuardService {
       // Count today's completed pickups
       const completedToday = await this.pickupRequestRepository.count({
         where: {
-          status: RequestStatus.COMPLETED,
+          status: RequestStatus.CONFIRMED,
           completedAt: {
             $gte: today,
             $lt: tomorrow,

@@ -105,7 +105,7 @@ export class ParentService {
 
     // Count active requests (pending or approved)
     const activeRequests = allRequests.filter(
-      r => r.status === RequestStatus.PENDING || r.status === RequestStatus.APPROVED
+      r => r.status === RequestStatus.PENDING || r.status === RequestStatus.CONFIRMED
     ).length;
 
     // Count pending requests
@@ -120,7 +120,7 @@ export class ParentService {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const completedToday = allRequests.filter(r => {
-      if (r.status !== RequestStatus.COMPLETED || !r.actualPickupTime) return false;
+      if (!r.actualPickupTime) return false;
       const pickupDate = new Date(r.actualPickupTime);
       return pickupDate >= today && pickupDate < tomorrow;
     }).length;

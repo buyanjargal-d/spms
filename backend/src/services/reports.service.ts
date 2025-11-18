@@ -35,7 +35,7 @@ export class ReportsService {
       .leftJoinAndSelect('pickup.student', 'student')
       .leftJoinAndSelect('student.class', 'class')
       .leftJoinAndSelect('pickup.requester', 'requester')
-      .leftJoinAndSelect('pickup.completedByUser', 'completedBy')
+      .leftJoinAndSelect('pickup.guard', 'completedBy')
       .where('pickup.scheduledPickupTime BETWEEN :startOfDay AND :endOfDay', {
         startOfDay,
         endOfDay
@@ -75,8 +75,8 @@ export class ReportsService {
 
   private calculateDailyStats(pickups: PickupRequest[]) {
     const total = pickups.length;
-    const completed = pickups.filter(p => p.status === RequestStatus.COMPLETED).length;
-    const pending = pickups.filter(p => p.status === RequestStatus.PENDING || p.status === RequestStatus.APPROVED).length;
+    const completed = pickups.filter(p => p.actualPickupTime !== null && p.actualPickupTime !== undefined).length;
+    const pending = pickups.filter(p => p.status === RequestStatus.PENDING || p.status === RequestStatus.CONFIRMED).length;
     const cancelled = pickups.filter(p => p.status === RequestStatus.CANCELLED).length;
 
     // Calculate on-time performance
@@ -85,7 +85,7 @@ export class ReportsService {
     let early = 0;
 
     pickups.forEach(pickup => {
-      if (pickup.status === RequestStatus.COMPLETED && pickup.actualPickupTime && pickup.scheduledPickupTime) {
+      if (pickup.actualPickupTime && pickup.scheduledPickupTime) {
         const scheduledTime = new Date(pickup.scheduledPickupTime).getTime();
         const actualTime = new Date(pickup.actualPickupTime || pickup.scheduledPickupTime).getTime();
         const diffMinutes = (actualTime - scheduledTime) / (1000 * 60);
@@ -175,7 +175,7 @@ export class ReportsService {
       where: {
         scheduledPickupTime: Between(startDate, endDate),
       },
-      relations: ['student', 'student.class', 'requester', 'completedByUser'],
+      relations: ['student', 'student.class', 'requester', 'guard'],
       order: { scheduledPickupTime: 'ASC' },
     });
 
@@ -197,7 +197,7 @@ export class ReportsService {
 
   private calculateMonthlySummary(pickups: PickupRequest[], startDate: Date, endDate: Date) {
     const totalPickups = pickups.length;
-    const completed = pickups.filter(p => p.status === RequestStatus.COMPLETED).length;
+    const completed = pickups.filter(p => p.actualPickupTime !== null && p.actualPickupTime !== undefined).length;
     const cancelled = pickups.filter(p => p.status === RequestStatus.CANCELLED).length;
 
     // Calculate school days (excluding weekends)
@@ -268,7 +268,7 @@ export class ReportsService {
         }
         guardianPickups[pickup.requesterId].count++;
 
-        if (pickup.status === RequestStatus.COMPLETED && pickup.actualPickupTime && pickup.scheduledPickupTime) {
+        if (pickup.actualPickupTime && pickup.scheduledPickupTime) {
           const scheduledTime = new Date(pickup.scheduledPickupTime).getTime();
           const actualTime = new Date(pickup.actualPickupTime || pickup.scheduledPickupTime).getTime();
           const diffMinutes = (actualTime - scheduledTime) / (1000 * 60);
@@ -351,7 +351,7 @@ export class ReportsService {
 
     const query = this.pickupRepository.createQueryBuilder('pickup')
       .leftJoinAndSelect('pickup.requester', 'requester')
-      .leftJoinAndSelect('pickup.completedByUser', 'completedBy')
+      .leftJoinAndSelect('pickup.guard', 'completedBy')
       .leftJoinAndSelect('pickup.approver', 'approver')
       .where('pickup.studentId = :studentId', { studentId })
       .andWhere('pickup.scheduledPickupTime BETWEEN :startDate AND :endDate', {
@@ -391,11 +391,11 @@ export class ReportsService {
 
   private calculateStudentStats(pickups: PickupRequest[]) {
     const total = pickups.length;
-    const completed = pickups.filter(p => p.status === RequestStatus.COMPLETED).length;
+    const completed = pickups.filter(p => p.actualPickupTime !== null && p.actualPickupTime !== undefined).length;
     const cancelled = pickups.filter(p => p.status === RequestStatus.CANCELLED).length;
 
     // Calculate average pickup time
-    const completedPickups = pickups.filter(p => p.status === RequestStatus.COMPLETED && p.scheduledPickupTime);
+    const completedPickups = pickups.filter(p => p.actualPickupTime && p.scheduledPickupTime);
     const avgTime = this.calculateAverageTime(completedPickups.map(p => p.scheduledPickupTime ? new Date(p.scheduledPickupTime) : new Date()));
 
     // Find most frequent guardian
@@ -512,7 +512,7 @@ export class ReportsService {
 
     const totalPickups = await this.pickupRepository.count();
     const completedPickups = await this.pickupRepository.count({
-      where: { status: RequestStatus.COMPLETED },
+      where: { status: RequestStatus.CONFIRMED },
     });
 
     return {

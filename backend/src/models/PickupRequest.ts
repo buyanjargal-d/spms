@@ -21,9 +21,8 @@ export enum RequestType {
 export enum RequestStatus {
   PENDING = 'pending', // Standard pickup pending teacher approval
   PENDING_PARENT_APPROVAL = 'pending_parent_approval', // Guest pickup waiting for parent approval
-  APPROVED = 'approved', // Approved by teacher (or parent+teacher for guest)
+  CONFIRMED = 'confirmed', // Confirmed by teacher (or parent+teacher for guest) - ready for pickup
   REJECTED = 'rejected', // Rejected by teacher or parent
-  COMPLETED = 'completed', // Pickup completed
   CANCELLED = 'cancelled', // Cancelled by requester
 }
 

@@ -115,7 +115,7 @@ export class TeacherService {
         completedToday = await this.pickupRepository.count({
           where: {
             studentId: In(ids),
-            status: RequestStatus.COMPLETED,
+            status: RequestStatus.CONFIRMED,
             actualPickupTime: Between(today, tomorrow),
           },
         });
@@ -185,11 +185,11 @@ export class TeacherService {
     // Calculate statistics
     pickups.forEach(pickup => {
       // By status
-      if (pickup.status === RequestStatus.COMPLETED) {
+      if (pickup.actualPickupTime) {
         summary.completed++;
       } else if (pickup.status === RequestStatus.PENDING) {
         summary.pending++;
-      } else if (pickup.status === RequestStatus.APPROVED) {
+      } else if (pickup.status === RequestStatus.CONFIRMED) {
         summary.approved++;
       }
 

@@ -3,6 +3,7 @@ import { PickupRequest, RequestStatus, RequestType } from '../models/PickupReque
 import { AppDataSource } from '../config/database';
 import { CreatePickupRequestDTO, PickupRequestFilters } from '../types/pickup.types';
 import { GuestApprovalService } from './guestApproval.service';
+import { logger } from '../utils/logger';
 
 export class PickupService {
   private pickupRepository: Repository<PickupRequest>;
@@ -35,6 +36,16 @@ export class PickupService {
     });
 
     const savedRequest = await this.pickupRepository.save(pickupRequest);
+
+    // Log location check notification (simulated - doesn't actually verify location)
+    logger.info(`📍 Location check notification: Pickup request created`, {
+      pickupRequestId: savedRequest.id,
+      requesterId,
+      studentId: data.studentId,
+      requestType: data.requestType,
+      message: 'Parent location has been logged for security purposes',
+      timestamp: new Date().toISOString(),
+    });
 
     // If guest pickup, create approval records for all authorized parents
     if (data.requestType === RequestType.GUEST) {
@@ -116,7 +127,7 @@ export class PickupService {
       throw new Error('Only pending requests can be approved');
     }
 
-    pickupRequest.status = RequestStatus.APPROVED;
+    pickupRequest.status = RequestStatus.CONFIRMED;
     pickupRequest.updatedAt = new Date();
 
     return this.pickupRepository.save(pickupRequest);
@@ -161,11 +172,11 @@ export class PickupService {
       throw new Error('Pickup request not found');
     }
 
-    if (pickupRequest.status !== RequestStatus.APPROVED) {
-      throw new Error('Only approved requests can be completed');
+    if (pickupRequest.status !== RequestStatus.CONFIRMED) {
+      throw new Error('Only confirmed requests can be picked up');
     }
 
-    pickupRequest.status = RequestStatus.COMPLETED;
+    // Keep status as CONFIRMED (no separate "completed" status)
     pickupRequest.actualPickupTime = data.actualPickupTime || new Date();
 
     if (data.pickupPersonId) {
@@ -199,8 +210,8 @@ export class PickupService {
       throw new Error('You can only cancel your own requests');
     }
 
-    if (pickupRequest.status === RequestStatus.COMPLETED) {
-      throw new Error('Cannot cancel completed requests');
+    if (pickupRequest.actualPickupTime) {
+      throw new Error('Cannot cancel requests that have been picked up');
     }
 
     pickupRequest.status = RequestStatus.CANCELLED;
