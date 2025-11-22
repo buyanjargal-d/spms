@@ -123,10 +123,10 @@ BEGIN
     SELECT COUNT(*) INTO class_count FROM classes;
     SELECT COUNT(*) INTO active_count FROM classes WHERE is_active = TRUE;
 
-    RAISE NOTICE '✅ Migration 014 completed successfully';
-    RAISE NOTICE '📊 Updated % classes (% active)', class_count, active_count;
-    RAISE NOTICE '🔧 Use is_class_full(class_id) to check if class is at capacity';
-    RAISE NOTICE 'ℹ️  All existing classes have been marked as active';
+    RAISE NOTICE 'Migration 014 completed successfully';
+    RAISE NOTICE 'Updated % classes (% active)', class_count, active_count;
+    RAISE NOTICE 'Use is_class_full(class_id) to check if class is at capacity';
+    RAISE NOTICE 'INFO: All existing classes have been marked as active';
 END $$;
 
 -- ============================================

@@ -143,10 +143,10 @@ COMMENT ON COLUMN pickup_requests.approved_at IS 'Timestamp when request was app
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 011 completed successfully';
-    RAISE NOTICE '📊 Added QR code, verification code, and approval tracking columns';
-    RAISE NOTICE '🔧 Created auto-generation functions and triggers';
-    RAISE NOTICE 'ℹ️  QR codes and PINs will be auto-generated when request is approved';
+    RAISE NOTICE 'Migration 011 completed successfully';
+    RAISE NOTICE 'Added QR code, verification code, and approval tracking columns';
+    RAISE NOTICE 'Created auto-generation functions and triggers';
+    RAISE NOTICE 'INFO: QR codes and PINs will be auto-generated when request is approved';
 END $$;
 
 -- ============================================

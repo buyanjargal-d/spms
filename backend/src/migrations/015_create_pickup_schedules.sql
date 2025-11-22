@@ -164,11 +164,11 @@ COMMENT ON COLUMN pickup_schedules.notes IS 'Additional notes for this recurring
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 015 completed successfully';
-    RAISE NOTICE '📊 Created pickup_schedules table';
-    RAISE NOTICE '🔧 Created helper functions: get_day_name(), get_todays_schedules()';
-    RAISE NOTICE 'ℹ️  Parents can now set recurring pickup schedules';
-    RAISE NOTICE 'ℹ️  Example: "Pick up my child every Monday and Friday at 3:30 PM"';
+    RAISE NOTICE 'Migration 015 completed successfully';
+    RAISE NOTICE 'Created pickup_schedules table';
+    RAISE NOTICE 'Created helper functions: get_day_name(), get_todays_schedules()';
+    RAISE NOTICE 'INFO: Parents can now set recurring pickup schedules';
+    RAISE NOTICE 'INFO: Example: "Pick up my child every Monday and Friday at 3:30 PM"';
 END $$;
 
 -- ============================================

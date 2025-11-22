@@ -43,7 +43,7 @@ function randomPhoneNumber() {
 }
 
 async function clearExistingData() {
-  console.log('\n🗑️  Clearing existing test data...');
+  console.log('\nClearing existing test data...');
 
   try {
     // Delete in order respecting foreign keys
@@ -57,14 +57,14 @@ async function clearExistingData() {
     await client.query('DELETE FROM classes');
     await client.query('DELETE FROM users WHERE dan_id LIKE \'TEST%\''); // Only delete test users
 
-    console.log('✅ Existing test data cleared');
+    console.log('Existing test data cleared');
   } catch (error) {
-    console.log('⚠️  Some tables may not exist:', error.message);
+    console.log('WARNING: Some tables may not exist:', error.message);
   }
 }
 
 async function seedUsers() {
-  console.log('\n👥 Seeding users...');
+  console.log('\nSeeding users...');
 
   const users = [];
 
@@ -127,7 +127,7 @@ async function seedUsers() {
     insertedUsers.push(result.rows[0]);
   }
 
-  console.log(`✅ Created ${insertedUsers.length} users`);
+  console.log(`Created ${insertedUsers.length} users`);
   console.log(`   - 1 Admin`);
   console.log(`   - 6 Teachers`);
   console.log(`   - 15 Parents`);
@@ -137,7 +137,7 @@ async function seedUsers() {
 }
 
 async function seedClasses(users) {
-  console.log('\n📚 Seeding classes...');
+  console.log('\nSeeding classes...');
 
   const teachers = users.filter(u => u.role === 'teacher');
   const classes = [];
@@ -161,12 +161,12 @@ async function seedClasses(users) {
     classes.push(result.rows[0]);
   }
 
-  console.log(`✅ Created ${classes.length} classes`);
+  console.log(`Created ${classes.length} classes`);
   return classes;
 }
 
 async function seedStudents(classes) {
-  console.log('\n👨‍🎓 Seeding students...');
+  console.log('\nSeeding students...');
 
   const students = [];
   let studentCounter = 1;
@@ -200,12 +200,12 @@ async function seedStudents(classes) {
     }
   }
 
-  console.log(`✅ Created ${students.length} students across ${classes.length} classes`);
+  console.log(`Created ${students.length} students across ${classes.length} classes`);
   return students;
 }
 
 async function seedGuardianRelationships(students, users) {
-  console.log('\n👨‍👩‍👧 Seeding guardian relationships...');
+  console.log('\nSeeding guardian relationships...');
 
   const parents = users.filter(u => u.role === 'parent');
   const guardianships = [];
@@ -240,7 +240,7 @@ async function seedGuardianRelationships(students, users) {
     }
   }
 
-  console.log(`✅ Created ${guardianships.length} guardian relationships`);
+  console.log(`Created ${guardianships.length} guardian relationships`);
   return guardianships;
 }
 
@@ -325,7 +325,7 @@ async function seedPickupRequests(students, users) {
     }
   }
 
-  console.log(`✅ Created ${requests.length} pickup requests`);
+  console.log(`Created ${requests.length} pickup requests`);
   console.log(`   - 5 Pending`);
   console.log(`   - 3 Pending parent approval`);
   console.log(`   - 10 Approved`);
@@ -379,7 +379,7 @@ async function seedGuestApprovals(requests, users) {
     }
   }
 
-  console.log(`✅ Created ${approvals.length} guest pickup approvals`);
+  console.log(`Created ${approvals.length} guest pickup approvals`);
   return approvals;
 }
 
@@ -497,7 +497,7 @@ async function seedNotifications(users, requests) {
     notifications.push(result.rows[0]);
   }
 
-  console.log(`✅ Created ${notifications.length} notifications`);
+  console.log(`Created ${notifications.length} notifications`);
   return notifications;
 }
 
@@ -621,12 +621,12 @@ async function seedAuditLogs(users, students, requests) {
     auditLogs.push(result.rows[0]);
   }
 
-  console.log(`✅ Created ${auditLogs.length} audit log entries`);
+  console.log(`Created ${auditLogs.length} audit log entries`);
   return auditLogs;
 }
 
 async function seedSchoolSettings() {
-  console.log('\n⚙️  Seeding school settings...');
+  console.log('\nSeeding school settings...');
 
   const settings = [
     { key: 'school_name', value: 'Монгол Улсын Дунд Сургууль', description: 'Сургуулийн нэр' },
@@ -651,16 +651,16 @@ async function seedSchoolSettings() {
     );
   }
 
-  console.log(`✅ Created/updated ${settings.length} school settings`);
+  console.log(`Created/updated ${settings.length} school settings`);
 }
 
 async function main() {
-  console.log('🚀 SPMS Database Seeding Script');
+  console.log('SPMS Database Seeding Script');
   console.log('================================\n');
 
   try {
     await client.connect();
-    console.log('✅ Connected to database');
+    console.log('Connected to database');
 
     // Clear existing test data
     await clearExistingData();
@@ -677,8 +677,8 @@ async function main() {
     await seedSchoolSettings();
 
     console.log('\n================================');
-    console.log('✅ Database seeding completed successfully!');
-    console.log('\n📊 Summary:');
+    console.log('Database seeding completed successfully!');
+    console.log('\nSummary:');
     console.log(`   - Users: ${users.length}`);
     console.log(`   - Classes: ${classes.length}`);
     console.log(`   - Students: ${students.length}`);

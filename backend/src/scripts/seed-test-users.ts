@@ -62,11 +62,11 @@ const testUsers = [
 
 async function seedTestUsers() {
   try {
-    console.log('🌱 Starting test user seeding...');
+    console.log('Starting test user seeding...');
 
     // Initialize database connection
     await AppDataSource.initialize();
-    console.log('✅ Database connected');
+    console.log('Database connected');
 
     const userRepository = AppDataSource.getRepository(User);
 
@@ -106,15 +106,15 @@ async function seedTestUsers() {
           isActive: true,
           failedLoginAttempts: 0,
         });
-        console.log(`✅ Created user: ${testUser.danId} (${testUser.role})`);
+        console.log(`Created user: ${testUser.danId} (${testUser.role})`);
         created++;
       }
     }
 
-    console.log('\n📊 Seeding Summary:');
-    console.log(`   ✅ Created: ${created} users`);
+    console.log('\nSeeding Summary:');
+    console.log(`   Created: ${created} users`);
     console.log(`   🔄 Updated: ${updated} users`);
-    console.log(`   ⏭️  Skipped: ${skipped} users`);
+    console.log(`   Skipped: ${skipped} users`);
     console.log(`   📝 Total: ${testUsers.length} users\n`);
 
     console.log('🔐 Test User Credentials:');
@@ -124,13 +124,13 @@ async function seedTestUsers() {
     });
     console.log('════════════════════════════════════════\n');
 
-    console.log('✅ Seeding completed successfully!');
+    console.log('Seeding completed successfully!');
 
     // Close database connection
     await AppDataSource.destroy();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error seeding test users:', error);
+    console.error('ERROR: Error seeding test users:', error);
     await AppDataSource.destroy();
     process.exit(1);
   }

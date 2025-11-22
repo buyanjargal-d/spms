@@ -8,12 +8,12 @@ import bcrypt from 'bcrypt';
 
 const seedDemoData = async () => {
   try {
-    console.log('🌱 Starting demo data seeding...');
+    console.log('Starting demo data seeding...');
 
     // Initialize database connection
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
-      console.log('✅ Database connection established');
+      console.log('Database connection established');
     }
 
     const userRepo = AppDataSource.getRepository(User);
@@ -25,7 +25,7 @@ const seedDemoData = async () => {
     // Check if demo data already exists
     const existingAdmin = await userRepo.findOne({ where: { danId: 'admin001' } });
     if (existingAdmin) {
-      console.log('\n⚠️  Demo data already exists!');
+      console.log('\nWARNING: Demo data already exists!');
       console.log('Skipping - data is already seeded. To reseed, manually clear demo data from database.\n');
       process.exit(0);
     }
@@ -45,7 +45,7 @@ const seedDemoData = async () => {
       isActive: true,
     });
     await userRepo.save(admin);
-    console.log('✅ Admin created: admin001');
+    console.log('Admin created: admin001');
 
     // 2. Create Teachers
     console.log('\n📝 Creating teachers...');
@@ -67,7 +67,7 @@ const seedDemoData = async () => {
       });
       await userRepo.save(teacher);
       teachers.push(teacher);
-      console.log(`✅ Teacher created: ${data.danId}`);
+      console.log(`Teacher created: ${data.danId}`);
     }
 
     // 3. Create Classes
@@ -95,7 +95,7 @@ const seedDemoData = async () => {
       isActive: true,
     });
     await classRepo.save(class2B);
-    console.log('✅ Classes created: 1-А анги, 2-Б анги');
+    console.log('Classes created: 1-А анги, 2-Б анги');
 
     // 4. Create Parents and Students
     console.log('\n📝 Creating parents and students...');
@@ -165,7 +165,7 @@ const seedDemoData = async () => {
       });
       await guardianRepo.save(guardian);
 
-      console.log(`✅ Created parent ${parentDanId} and student ${studentCode} (${data.studentName})`);
+      console.log(`Created parent ${parentDanId} and student ${studentCode} (${data.studentName})`);
     }
 
     // 5. Create Guard User
@@ -180,7 +180,7 @@ const seedDemoData = async () => {
       isActive: true,
     });
     await userRepo.save(guard);
-    console.log('✅ Guard created: guard001');
+    console.log('Guard created: guard001');
 
     // 6. Create Pickup Requests
     console.log('\n📝 Creating pickup requests...');
@@ -215,7 +215,7 @@ const seedDemoData = async () => {
         verificationMethod: 'qr',
       });
       await pickupRepo.save(pickup);
-      console.log(`✅ Completed pickup created for ${student.firstName}`);
+      console.log(`Completed pickup created for ${student.firstName}`);
     }
 
     // Approved pickups (today)
@@ -241,7 +241,7 @@ const seedDemoData = async () => {
         specialInstructions: i === 3 ? 'Эмчийн цаг, эрт авна' : undefined,
       });
       await pickupRepo.save(pickup);
-      console.log(`✅ Approved pickup created for ${student.firstName} at ${pickupTime.toLocaleTimeString('mn-MN')}`);
+      console.log(`Approved pickup created for ${student.firstName} at ${pickupTime.toLocaleTimeString('mn-MN')}`);
     }
 
     // Pending pickups (today)
@@ -262,11 +262,11 @@ const seedDemoData = async () => {
         status: RequestStatus.PENDING,
       });
       await pickupRepo.save(pickup);
-      console.log(`✅ Pending pickup created for ${student.firstName}`);
+      console.log(`Pending pickup created for ${student.firstName}`);
     }
 
     console.log('\n🎉 Demo data seeding completed successfully!');
-    console.log('\n📊 Summary:');
+    console.log('\nSummary:');
     console.log('   • 1 Admin (admin001)');
     console.log('   • 2 Teachers (teacher001, teacher002)');
     console.log('   • 12 Parents (parent001-parent012)');
@@ -277,7 +277,7 @@ const seedDemoData = async () => {
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error seeding demo data:', error);
+    console.error('ERROR: Error seeding demo data:', error);
     process.exit(1);
   }
 };

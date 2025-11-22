@@ -58,8 +58,8 @@ COMMENT ON COLUMN pickup_requests.status IS
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 020 completed successfully';
-    RAISE NOTICE '📊 Updated pickup_requests status constraint';
-    RAISE NOTICE 'ℹ️  Changed allowed values: approved → confirmed';
-    RAISE NOTICE 'ℹ️  Removed obsolete statuses: completed, in_progress';
+    RAISE NOTICE 'Migration 020 completed successfully';
+    RAISE NOTICE 'Updated pickup_requests status constraint';
+    RAISE NOTICE 'INFO: Changed allowed values: approved → confirmed';
+    RAISE NOTICE 'INFO: Removed obsolete statuses: completed, in_progress';
 END $$;

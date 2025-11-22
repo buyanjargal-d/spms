@@ -2,11 +2,11 @@ import { AppDataSource } from '../config/database';
 
 async function runMigration() {
   try {
-    console.log('🔧 Connecting to database...');
+    console.log('Connecting to database...');
     await AppDataSource.initialize();
-    console.log('✅ Connected to database');
+    console.log('Connected to database');
 
-    console.log('🔧 Running Section 6 (Admin Functionality) migration...');
+    console.log('Running Section 6 (Admin Functionality) migration...');
     await AppDataSource.query(`
       -- Add security and tracking fields to users table
       ALTER TABLE users
@@ -153,18 +153,18 @@ async function runMigration() {
       ON CONFLICT (template_key) DO NOTHING;
     `);
 
-    console.log('✅ Migration completed successfully');
-    console.log('📊 Added Section 6 fields to users, students, classes tables');
-    console.log('👥 Enhanced student_guardians with authorization tracking');
-    console.log('⚙️  Created school_settings table with defaults');
-    console.log('📧 Created notification_templates table with defaults');
-    console.log('📅 Created school_schedules table');
-    console.log('🔍 Created performance indexes');
+    console.log('Migration completed successfully');
+    console.log('Added Section 6 fields to users, students, classes tables');
+    console.log('Enhanced student_guardians with authorization tracking');
+    console.log('Created school_settings table with defaults');
+    console.log('Created notification_templates table with defaults');
+    console.log('Created school_schedules table');
+    console.log('Created performance indexes');
 
     await AppDataSource.destroy();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error running migration:', error);
+    console.error('ERROR: Error running migration:', error);
     await AppDataSource.destroy();
     process.exit(1);
   }

@@ -15,7 +15,6 @@ env:
   SONAR_HOST_URL: https://sonarcloud.io
 
 jobs:
-  # Stage 1: Code Quality & Security Analysis
   code-security-analysis:
     name: Code Quality & SAST
     runs-on: ubuntu-latest
@@ -35,7 +34,6 @@ jobs:
             backend/package-lock.json
             frontend/package-lock.json
 
-      # Install dependencies for analysis
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm ci
@@ -44,7 +42,6 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      # Run tests with coverage to meet 80% threshold
       - name: Run backend tests with coverage
         working-directory: ./backend
         run: npm test -- --coverage --passWithNoTests || echo "Tests completed, coverage generated"
@@ -59,29 +56,23 @@ jobs:
         run: npm test -- --coverage || echo "Frontend tests completed, coverage generated"
         continue-on-error: true
 
-      # Verify coverage files exist
       - name: Check coverage files
         run: |
           echo "Checking for coverage files..."
           ls -la backend/coverage/ || echo "No backend coverage"
           ls -la frontend/coverage/ || echo "No frontend coverage"
 
-      # SonarQube/SonarCloud Analysis - MUST run after tests to pick up coverage
-      # NOTE: The sonar-project.properties file contains the project key and organization
-      # Alternatively, set SONAR_PROJECT_KEY and SONAR_ORGANIZATION as GitHub secrets
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # Secrets Scanning with GitLeaks
       - name: GitLeaks Secret Scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Semgrep SAST
       - name: Semgrep Security Scan
         uses: returntocorp/semgrep-action@v1
         continue-on-error: true
@@ -93,7 +84,6 @@ jobs:
             p/typescript
             p/react
 
-      # ESLint Security Analysis
       - name: Run ESLint Security Check
         run: |
           cd backend
@@ -109,7 +99,6 @@ jobs:
             eslint-backend-report.json
             eslint-frontend-report.json
 
-  # Stage 2: Dependency Security Scanning
   dependency-security:
     name: Dependency Security Scanning
     runs-on: ubuntu-latest
@@ -127,7 +116,6 @@ jobs:
             backend/package-lock.json
             frontend/package-lock.json
 
-      # Install dependencies for proper analysis
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm ci
@@ -136,7 +124,6 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      # NPM Audit
       - name: NPM Audit - Backend
         working-directory: ./backend
         run: |
@@ -149,12 +136,6 @@ jobs:
           npm audit --json > ../npm-audit-frontend.json || true
           npm audit --audit-level=moderate || echo "Frontend has vulnerabilities"
 
-      # Snyk Security Scan
-      # NOTE: Requires SNYK_TOKEN secret to be configured in GitHub repository settings
-      # To set up:
-      #   1. Create a Snyk account at https://snyk.io/
-      #   2. Generate an API token from your Snyk account settings
-      #   3. Add the token as SNYK_TOKEN in GitHub Settings > Secrets and variables > Actions
       - name: Snyk Security Scan
         uses: snyk/actions/node@master
         continue-on-error: true
@@ -163,7 +144,6 @@ jobs:
         with:
           args: --all-projects --severity-threshold=high
 
-      # OWASP Dependency-Check
       - name: OWASP Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         env:
@@ -191,7 +171,6 @@ jobs:
             npm-audit-backend.json
             npm-audit-frontend.json
 
-  # Stage 3: Build & Unit Tests
   build-and-test:
     name: Build and Unit Test
     runs-on: ubuntu-latest
@@ -241,7 +220,6 @@ jobs:
             backend/dist
             frontend/dist
 
-  # Stage 4: Container Security Scanning
   container-security:
     name: Container Security Scanning
     runs-on: ubuntu-latest
@@ -254,7 +232,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Build images for scanning
       - name: Build backend image
         run: |
           docker build -t spms-backend:${{ github.sha }} ./backend
@@ -263,7 +240,6 @@ jobs:
         run: |
           docker build -t spms-frontend:${{ github.sha }} ./frontend
 
-      # Trivy Container Scanning
       - name: Trivy Scan - Backend
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
@@ -291,7 +267,6 @@ jobs:
             trivy-backend-report.sarif
             trivy-frontend-report.sarif
 
-      # Trivy JSON Reports
       - name: Trivy JSON Scan - Backend
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
@@ -316,7 +291,6 @@ jobs:
             trivy-backend-report.json
             trivy-frontend-report.json
 
-      # Docker Scout (if available)
       - name: Docker Scout CVE Scan
         uses: docker/scout-action@v1
         continue-on-error: true
@@ -333,7 +307,6 @@ jobs:
           name: scout-reports
           path: scout-backend-report.sarif
 
-  # Stage 5: Infrastructure as Code Security
   iac-security:
     name: IaC Security Scanning
     runs-on: ubuntu-latest
@@ -342,7 +315,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Checkov IaC Security Scan
       - name: Checkov IaC Scan
         uses: bridgecrewio/checkov-action@v12.2867.0
         continue-on-error: true
@@ -363,7 +335,6 @@ jobs:
             checkov-report.json
             checkov-report.sarif
 
-      # Hadolint - Dockerfile Linting
       - name: Hadolint Dockerfile Lint - Backend
         uses: hadolint/hadolint-action@v3.1.0
         with:
@@ -388,7 +359,6 @@ jobs:
             hadolint-backend.sarif
             hadolint-frontend.sarif
 
-  # Stage 6: Deploy to Production
   deploy-production:
     name: Deploy to Production (EC2)
     runs-on: ubuntu-latest
@@ -424,34 +394,26 @@ jobs:
             set -e
 
             echo "========================================="
-            echo "🚀 SPMS PRODUCTION Deployment Started"
+            echo "SPMS Системийг байршуулж байна"
             echo "========================================="
-            echo "Branch: ${BRANCH_NAME}"
+            echo "Салбар: ${BRANCH_NAME}"
             echo "Image Tag: ${IMAGE_TAG}"
-            echo "Commit: ${COMMIT_MESSAGE}"
+            echo "Өөрчлөлт: ${COMMIT_MESSAGE}"
             echo "========================================="
 
-            # CRITICAL: Clean up Docker resources FIRST to free disk space
-            echo "🧹 AGGRESSIVE CLEANUP - Freeing disk space on 16GB server..."
-            echo "This ensures we have enough disk space for operations..."
-
-            # Stop any running containers first
+            echo "Docker цэвэрлэлт эхэлж байна..."
             docker compose -f /home/${USERNAME}/spms/docker-compose.devsecops.yml down --timeout 30 2>/dev/null || true
 
-            # Remove ALL Docker images, containers, volumes, networks
-            echo "🗑️  Removing ALL Docker resources..."
+            echo "Docker нөөцийг устгаж байна..."
             docker rm -f $(docker ps -aq) 2>/dev/null || true
             docker rmi -f $(docker images -aq) 2>/dev/null || true
             docker volume rm -f $(docker volume ls -q) 2>/dev/null || true
             docker network prune -f 2>/dev/null || true
 
-            # Docker system prune with all options
-            echo "🧹 Running docker system prune..."
             docker system prune -af --volumes 2>/dev/null || true
             docker builder prune -af 2>/dev/null || true
 
-            # Clean up system temporary files and caches
-            echo "🧹 Cleaning system files..."
+            echo "Системийн файлуудыг цэвэрлэж байна..."
             sudo rm -rf /tmp/* 2>/dev/null || true
             sudo rm -rf /var/tmp/* 2>/dev/null || true
             rm -rf ~/.npm 2>/dev/null || true
@@ -460,52 +422,45 @@ jobs:
             sudo apt-get autoclean 2>/dev/null || true
             sudo journalctl --vacuum-time=1d 2>/dev/null || true
 
-            # Clean up old Git repository logs and refs
             if [ -d "/home/${USERNAME}/spms/.git" ]; then
-              echo "🧹 Cleaning Git repository..."
+              echo "Git репозитор цэвэрлэж байна..."
               cd /home/${USERNAME}/spms
               git gc --aggressive --prune=now 2>/dev/null || true
               git reflog expire --expire=now --all 2>/dev/null || true
             fi
 
-            # Show disk space after cleanup
             echo ""
             echo "========================================="
-            echo "📊 Disk Space After Cleanup"
+            echo "Диск сэлт хэмжээ"
             echo "========================================="
             df -h / | grep -E 'Filesystem|/$' || df -h /
             echo ""
-            echo "Docker disk usage:"
+            echo "Docker диск ашиглалт:"
             docker system df || true
             echo "========================================="
 
-            # Configure Git to use SSH
             export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
 
-            # Navigate to application directory
             APP_DIR="/home/${USERNAME}/spms"
 
-            # Check if repository directory exists
             if [ ! -d "${APP_DIR}/.git" ]; then
-              echo "📁 Repository not found. Cloning..."
+              echo "Репозитор олдсонгүй. Татаж байна..."
               rm -rf ${APP_DIR}
               mkdir -p ${APP_DIR}
               cd ${APP_DIR}
               git clone git@github.com:${{ github.repository }}.git .
             else
-              echo "📁 Repository found. Updating..."
+              echo "Репозитор олдлоо. Шинэчилж байна..."
               cd ${APP_DIR}
             fi
 
-            # Pull latest changes
-            echo "🔄 Pulling latest code from ${BRANCH_NAME}..."
+            echo "${BRANCH_NAME}-с кодыг татаж байна..."
             git fetch origin
             git checkout ${BRANCH_NAME}
             git reset --hard origin/${BRANCH_NAME}
             git pull origin ${BRANCH_NAME}
 
-            # Create .env file for production deployment
-            echo "⚙️  Creating production .env file..."
+            echo ".env файл үүсгэж байна..."
             cat > .env << 'EOF'
             # Environment
             NODE_ENV=production
@@ -549,34 +504,30 @@ jobs:
             VITE_API_URL=/api/v1
             EOF
 
-            # Create nginx SSL directory if it doesn't exist
-            echo "📁 Creating SSL directory..."
+            echo "SSL директор үүсгэж байна..."
             mkdir -p nginx/ssl
 
-            # Build and start new containers
-            echo "🔨 Building and starting new containers..."
+            echo "Container-үүдийг бүтээж, эхлүүлж байна..."
             if ! docker compose -f docker-compose.devsecops.yml up -d --build --remove-orphans; then
-              echo "❌ Failed to start containers!"
+              echo "ERROR: Container-үүд эхлэхэд алдаа гарлаа!"
               docker compose -f docker-compose.devsecops.yml logs
               exit 1
             fi
 
-            # Wait for services to be healthy
-            echo "⏳ Waiting for services to become healthy..."
+            echo "Үйлчилгээнүүд асах хүртэл хүлээж байна..."
             for i in {1..30}; do
               if docker compose -f docker-compose.devsecops.yml ps | grep -q "healthy"; then
-                echo "✅ Services are healthy!"
+                echo "SUCCESS: Үйлчилгээнүүд амжилттай ажиллаж байна!"
                 break
               fi
-              echo "Waiting... ($i/30)"
+              echo "Хүлээж байна... ($i/30)"
               sleep 2
             done
 
-            # Check if any containers exited
-            echo "🔍 Checking container status..."
+            echo "Container статус шалгаж байна..."
             if docker compose -f docker-compose.devsecops.yml ps | grep -i "exit"; then
-              echo "❌ Some containers have exited!"
-              echo "Container status:"
+              echo "ERROR: Зарим container-үүд унтарсан байна!"
+              echo "Container статус:"
               docker compose -f docker-compose.devsecops.yml ps
               echo ""
               echo "Container logs:"
@@ -584,54 +535,49 @@ jobs:
               exit 1
             fi
 
-            # Verify deployment
             echo "========================================="
-            echo "📊 Deployment Status"
+            echo "Системийн статус"
             echo "========================================="
             docker compose -f docker-compose.devsecops.yml ps
 
-            # Show resource usage
             echo ""
             echo "========================================="
-            echo "💻 Resource Usage"
+            echo "Нөөцийн ашиглалт"
             echo "========================================="
             docker stats --no-stream
 
-            # Show logs from backend and frontend
             echo ""
             echo "========================================="
-            echo "📋 Recent Logs"
+            echo "Сүүлийн логууд"
             echo "========================================="
             docker compose -f docker-compose.devsecops.yml logs --tail=30
 
-            # Test backend health endpoint
             echo ""
             echo "========================================="
-            echo "🏥 Health Check"
+            echo "Системийн эрүүл мэнд шалгалт"
             echo "========================================="
             sleep 5
-            curl -f http://localhost:3000/health || echo "⚠️  Backend health check failed"
-            curl -f http://localhost/ || echo "⚠️  Frontend health check failed"
+            curl -f http://localhost:3000/health || echo "ERROR: Backend шалгалт амжилтгүй"
+            curl -f http://localhost/ || echo "ERROR: Frontend шалгалт амжилтгүй"
 
             echo ""
             echo "========================================="
-            echo "✅ PRODUCTION Deployment Complete!"
+            echo "SUCCESS: Системийг амжилттай байршууллаа!"
             echo "========================================="
 
       - name: Post-deployment verification
         run: |
           echo "========================================="
-          echo "✅ SPMS PRODUCTION Deployment Summary"
+          echo "SPMS Системийн мэдээлэл"
           echo "========================================="
-          echo "🌐 Frontend URL: http://98.95.194.177"
-          echo "🔧 Backend API: http://98.95.194.177:3000"
-          echo "📊 Branch: ${{ github.ref_name }}"
-          echo "📝 Commit: ${{ github.sha }}"
-          echo "👤 Deployed by: ${{ github.actor }}"
-          echo "⏰ Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "Frontend: http://98.95.194.177"
+          echo "Backend API: http://98.95.194.177:3000"
+          echo "Салбар: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Хэрэглэгч: ${{ github.actor }}"
+          echo "Цаг: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
           echo "========================================="
 
-  # Stage 7: DAST - Dynamic Application Security Testing
   dast-testing:
     name: DAST with OWASP ZAP
     runs-on: ubuntu-latest
@@ -642,7 +588,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Wait for application to be fully ready
       - name: Wait for application readiness
         continue-on-error: true
         run: |
@@ -654,7 +599,7 @@ jobs:
             echo "Attempt $attempt of $max_attempts..."
 
             if curl -f -s -o /dev/null http://98.95.194.177/health; then
-              echo "✅ Application is ready!"
+              echo "Application is ready!"
               exit 0
             fi
 
@@ -663,13 +608,12 @@ jobs:
             attempt=$((attempt + 1))
           done
 
-          echo "⚠️ Application did not become ready within expected time"
+          echo "Application did not become ready within expected time"
           echo "Attempting to show application status..."
           curl -v http://98.95.194.177/health || true
           echo "Continuing with DAST scan anyway..."
           exit 0
 
-      # OWASP ZAP Baseline Scan
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         continue-on-error: true
@@ -680,7 +624,6 @@ jobs:
           allow_issue_writing: false
           fail_action: false
 
-      # OWASP ZAP Full Scan
       - name: OWASP ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.10.0
         continue-on-error: true
@@ -701,7 +644,6 @@ jobs:
             report_json.json
             report_md.md
 
-  # Stage 8: Security Report Generation
   security-report:
     name: Generate Security Report
     runs-on: ubuntu-latest
@@ -735,27 +677,27 @@ jobs:
           ## Security Scans Performed
 
           ### 1. Static Application Security Testing (SAST)
-          - ✅ SonarCloud Code Quality Analysis
-          - ✅ Semgrep Security Patterns
-          - ✅ ESLint Security Rules
-          - ✅ GitLeaks Secret Detection
+          - SonarCloud Code Quality Analysis
+          - Semgrep Security Patterns
+          - ESLint Security Rules
+          - GitLeaks Secret Detection
 
           ### 2. Dependency Security
-          - ✅ NPM Audit (Backend & Frontend)
-          - ✅ OWASP Dependency-Check
-          - ✅ Snyk Vulnerability Scanning
+          - NPM Audit (Backend & Frontend)
+          - OWASP Dependency-Check
+          - Snyk Vulnerability Scanning
 
           ### 3. Container Security
-          - ✅ Trivy Container Scanning
-          - ✅ Docker Scout CVE Analysis
+          - Trivy Container Scanning
+          - Docker Scout CVE Analysis
 
           ### 4. Infrastructure as Code (IaC)
-          - ✅ Checkov Security Policies
-          - ✅ Hadolint Dockerfile Best Practices
+          - Checkov Security Policies
+          - Hadolint Dockerfile Best Practices
 
           ### 5. Dynamic Application Security Testing (DAST)
-          - ✅ OWASP ZAP Baseline Scan
-          - ✅ OWASP ZAP Full Scan
+          - OWASP ZAP Baseline Scan
+          - OWASP ZAP Full Scan
 
           ---
 
@@ -821,7 +763,6 @@ jobs:
               body: report
             });
 
-  # Final notification
   notify:
     name: Deployment Notification
     runs-on: ubuntu-latest
@@ -832,20 +773,20 @@ jobs:
       - name: Pipeline Summary
         run: |
           echo "========================================="
-          echo "🎯 DevSecOps Pipeline Complete"
+          echo "DevSecOps Pipeline дууссан"
           echo "========================================="
-          echo "✅ Code Security Analysis: ${{ needs.code-security-analysis.result }}"
-          echo "✅ Dependency Security: ${{ needs.dependency-security.result }}"
-          echo "✅ Container Security: ${{ needs.container-security.result }}"
-          echo "✅ IaC Security: ${{ needs.iac-security.result }}"
-          echo "✅ Production Deployment: ${{ needs.deploy-production.result }}"
-          echo "✅ DAST Testing: ${{ needs.dast-testing.result }}"
-          echo "✅ Security Report: ${{ needs.security-report.result }}"
+          echo "Кодын аюулгүй байдал: ${{ needs.code-security-analysis.result }}"
+          echo "Багцын аюулгүй байдал: ${{ needs.dependency-security.result }}"
+          echo "Container аюулгүй байдал: ${{ needs.container-security.result }}"
+          echo "IaC аюулгүй байдал: ${{ needs.iac-security.result }}"
+          echo "Системийн байршуулалт: ${{ needs.deploy-production.result }}"
+          echo "DAST тест: ${{ needs.dast-testing.result }}"
+          echo "Аюулгүй байдлын тайлан: ${{ needs.security-report.result }}"
           echo "========================================="
           if [ "${{ needs.deploy-production.result }}" == "success" ]; then
-            echo "🚀 Application successfully deployed to PRODUCTION!"
-            echo "🌐 URL: http://98.95.194.177"
+            echo "SUCCESS: Систем амжилттай байршуулагдлаа!"
+            echo "URL: http://98.95.194.177"
           else
-            echo "❌ Deployment failed or was skipped"
+            echo "ERROR: Байршуулалт амжилтгүй болсон"
           fi
           echo "========================================="

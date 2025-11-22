@@ -9,10 +9,10 @@ async function startServer(): Promise<void> {
 
     const PORT = ENV.PORT;
     const server = app.app.listen(PORT, () => {
-      logger.info(`🚀 Server is running on port ${PORT}`);
-      logger.info(`📝 Environment: ${ENV.NODE_ENV}`);
-      logger.info(`🌐 API Base URL: http://localhost:${PORT}${ENV.API_PREFIX}`);
-      logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
+      logger.info(`Server is running on port ${PORT}`);
+      logger.info(`Environment: ${ENV.NODE_ENV}`);
+      logger.info(`API Base URL: http://localhost:${PORT}${ENV.API_PREFIX}`);
+      logger.info(`Health check: http://localhost:${PORT}/health`);
     });
 
     // Graceful shutdown

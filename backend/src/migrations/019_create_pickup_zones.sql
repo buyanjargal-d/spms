@@ -202,9 +202,9 @@ COMMENT ON COLUMN classes.zone_id IS 'Pickup zone assigned to this class';
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 019 completed successfully';
-    RAISE NOTICE '📊 Created pickup_zones table (OPTIONAL feature)';
-    RAISE NOTICE '🔧 Created functions:';
+    RAISE NOTICE 'Migration 019 completed successfully';
+    RAISE NOTICE 'Created pickup_zones table (OPTIONAL feature)';
+    RAISE NOTICE 'Created functions:';
     RAISE NOTICE '   - get_zone_statistics(zone_id)';
     RAISE NOTICE '   - get_all_zones_with_stats()';
     RAISE NOTICE '📍 Added zone_id column to classes table';
@@ -212,8 +212,8 @@ BEGIN
     RAISE NOTICE '   - Elementary Zone (ELEM) - Green';
     RAISE NOTICE '   - Middle School Zone (MIDDLE) - Blue';
     RAISE NOTICE '   - High School Zone (HIGH) - Orange';
-    RAISE NOTICE 'ℹ️  Zones help organize pickup by grade level/location';
-    RAISE NOTICE 'ℹ️  Guards can see which zone each student belongs to';
+    RAISE NOTICE 'INFO: Zones help organize pickup by grade level/location';
+    RAISE NOTICE 'INFO: Guards can see which zone each student belongs to';
 END $$;
 
 -- ============================================

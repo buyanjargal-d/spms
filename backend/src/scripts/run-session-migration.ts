@@ -2,11 +2,11 @@ import { AppDataSource } from '../config/database';
 
 async function runMigration() {
   try {
-    console.log('🔧 Connecting to database...');
+    console.log('Connecting to database...');
     await AppDataSource.initialize();
-    console.log('✅ Connected to database');
+    console.log('Connected to database');
 
-    console.log('🔧 Running migration...');
+    console.log('Running migration...');
     await AppDataSource.query(`
       -- Create user_sessions table
       CREATE TABLE IF NOT EXISTS user_sessions (
@@ -45,13 +45,13 @@ async function runMigration() {
           ON user_sessions(expires_at);
     `);
 
-    console.log('✅ Migration completed successfully');
-    console.log('📱 Created user_sessions table for multi-device tracking');
+    console.log('Migration completed successfully');
+    console.log('Created user_sessions table for multi-device tracking');
 
     await AppDataSource.destroy();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error running migration:', error);
+    console.error('ERROR: Error running migration:', error);
     await AppDataSource.destroy();
     process.exit(1);
   }

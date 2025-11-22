@@ -15,7 +15,6 @@ env:
   DEPLOY_BRANCH: ${{ github.ref_name }}
 
 jobs:
-  # Build and test before deployment
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
@@ -55,7 +54,6 @@ jobs:
           VITE_API_URL: /api/v1
         run: npm run build
 
-  # Deploy to cloud server
   deploy:
     name: Deploy to Cloud
     runs-on: ubuntu-latest
@@ -89,7 +87,7 @@ jobs:
             set -e
 
             echo "========================================="
-            echo "🚀 SPMS Cloud Deployment Started"
+            echo "SPMS Cloud Deployment Started"
             echo "========================================="
             echo "Branch: ${BRANCH_NAME}"
             echo "Image Tag: ${IMAGE_TAG}"
@@ -104,25 +102,25 @@ jobs:
 
             # Check if repository directory exists
             if [ ! -d "${APP_DIR}/.git" ]; then
-              echo "📁 Repository not found. Cloning..."
+              echo "Repository not found. Cloning..."
               rm -rf ${APP_DIR}
               mkdir -p ${APP_DIR}
               cd ${APP_DIR}
               git clone git@github.com:${{ github.repository }}.git .
             else
-              echo "📁 Repository found. Updating..."
+              echo "Repository found. Updating..."
               cd ${APP_DIR}
             fi
 
             # Pull latest changes
-            echo "🔄 Pulling latest code from ${BRANCH_NAME}..."
+            echo "Pulling latest code from ${BRANCH_NAME}..."
             git fetch origin
             git checkout ${BRANCH_NAME}
             git reset --hard origin/${BRANCH_NAME}
             git pull origin ${BRANCH_NAME}
 
             # Create .env file for production deployment
-            echo "⚙️  Creating production .env file..."
+            echo "Creating production .env file..."
             cat > .env << 'EOF'
             # Environment
             NODE_ENV=production
@@ -167,22 +165,22 @@ jobs:
             EOF
 
             # Create nginx SSL directory if it doesn't exist
-            echo "📁 Creating SSL directory..."
+            echo "Creating SSL directory..."
             mkdir -p nginx/ssl
 
             # Backup current containers (if any)
-            echo "💾 Backing up current deployment..."
+            echo "Backing up current deployment..."
             docker compose -f docker-compose.prod.yml ps > deployment-backup-$(date +%Y%m%d-%H%M%S).log 2>&1 || true
 
             # Pull latest images if using registry (optional)
             # docker compose -f docker-compose.prod.yml pull 2>/dev/null || true
 
             # Stop existing containers gracefully
-            echo "🛑 Stopping existing containers..."
+            echo "Stopping existing containers..."
             docker compose -f docker-compose.prod.yml down --timeout 30 2>/dev/null || true
 
             # Aggressive cleanup to free disk space
-            echo "🧹 Aggressively cleaning up Docker resources to free disk space..."
+            echo " Aggressively cleaning up Docker resources to free disk space..."
 
             # Remove all stopped containers
             docker container prune -f 2>/dev/null || true
@@ -203,18 +201,18 @@ jobs:
             rm -rf ~/.npm 2>/dev/null || true
 
             # Show disk space after cleanup
-            echo "📊 Disk space after cleanup:"
+            echo "Disk space after cleanup:"
             df -h / || true
 
             # Build and start new containers
-            echo "🔨 Building and starting new containers..."
+            echo " Building and starting new containers..."
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
             # Wait for services to be healthy
-            echo "⏳ Waiting for services to become healthy..."
+            echo " Waiting for services to become healthy..."
             for i in {1..30}; do
               if docker compose -f docker-compose.prod.yml ps | grep -q "healthy"; then
-                echo "✅ Services are healthy!"
+                echo " Services are healthy!"
                 break
               fi
               echo "Waiting... ($i/30)"
@@ -223,57 +221,57 @@ jobs:
 
             # Verify deployment
             echo "========================================="
-            echo "📊 Deployment Status"
+            echo " Deployment Status"
             echo "========================================="
             docker compose -f docker-compose.prod.yml ps
 
             # Show resource usage
             echo ""
             echo "========================================="
-            echo "💻 Resource Usage"
+            echo " Resource Usage"
             echo "========================================="
             docker stats --no-stream
 
             # Show logs from backend and frontend
             echo ""
             echo "========================================="
-            echo "📋 Recent Logs"
+            echo " Recent Logs"
             echo "========================================="
             docker compose -f docker-compose.prod.yml logs --tail=30
 
             # Test backend health endpoint
             echo ""
             echo "========================================="
-            echo "🏥 Health Check"
+            echo "Health Check"
             echo "========================================="
             sleep 5
-            curl -f http://localhost:3000/health || echo "⚠️  Backend health check failed"
-            curl -f http://localhost/ || echo "⚠️  Frontend health check failed"
+            curl -f http://localhost:3000/health || echo " Backend health check failed"
+            curl -f http://localhost/ || echo "Frontend health check failed"
 
             echo ""
             echo "========================================="
-            echo "✅ Deployment Complete!"
+            echo "Deployment Complete!"
             echo "========================================="
 
       - name: Post-deployment verification
         run: |
           echo "========================================="
-          echo "✅ SPMS Deployment Summary"
+          echo "SPMS Deployment Summary"
           echo "========================================="
-          echo "🌐 Frontend URL: http://${{ secrets.EC2_HOST }}"
-          echo "🔧 Backend API: http://${{ secrets.EC2_HOST }}:3000"
-          echo "📊 Branch: ${{ github.ref_name }}"
-          echo "📝 Commit: ${{ github.sha }}"
-          echo "👤 Deployed by: ${{ github.actor }}"
-          echo "⏰ Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "Frontend URL: http://${{ secrets.EC2_HOST }}"
+          echo " Backend API: http://${{ secrets.EC2_HOST }}:3000"
+          echo " Branch: ${{ github.ref_name }}"
+          echo " Commit: ${{ github.sha }}"
+          echo " Deployed by: ${{ github.actor }}"
+          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
           echo "========================================="
 
       - name: Notify deployment status
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ Deployment succeeded!"
+            echo " Deployment succeeded!"
           else
-            echo "❌ Deployment failed!"
+            echo "Deployment failed!"
             exit 1
           fi

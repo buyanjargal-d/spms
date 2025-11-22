@@ -277,14 +277,14 @@ COMMENT ON FUNCTION broadcast_notification(VARCHAR, TEXT, VARCHAR) IS 'Send a no
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 016 completed successfully';
-    RAISE NOTICE '📊 Created auto-notification trigger system';
-    RAISE NOTICE '🔧 Created functions:';
+    RAISE NOTICE 'Migration 016 completed successfully';
+    RAISE NOTICE 'Created auto-notification trigger system';
+    RAISE NOTICE 'Created functions:';
     RAISE NOTICE '   - auto_create_pickup_notification() (trigger)';
     RAISE NOTICE '   - notify_student_guardians()';
     RAISE NOTICE '   - send_notification()';
     RAISE NOTICE '   - broadcast_notification()';
-    RAISE NOTICE 'ℹ️  Notifications will now be automatically created when:';
+    RAISE NOTICE 'INFO: Notifications will now be automatically created when:';
     RAISE NOTICE '   - New pickup request is created';
     RAISE NOTICE '   - Request is approved';
     RAISE NOTICE '   - Request is rejected';

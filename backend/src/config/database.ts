@@ -13,7 +13,7 @@ const isTransactionPooler = databaseUrl.includes(':6543');
 const isLocalPostgres = databaseUrl.includes('@postgres:5432') || databaseUrl.includes('@localhost:5432');
 
 // Log SSL configuration for debugging
-console.log('🔍 Database URL check:', {
+console.log('Database URL check:', {
   hasTransactionPooler: isTransactionPooler,
   hasLocalPostgres: isLocalPostgres,
   willUseSSL: !(isTransactionPooler || isLocalPostgres),
@@ -42,10 +42,10 @@ export const AppDataSource = new DataSource({
 export async function initializeDatabase(): Promise<void> {
   try {
     await AppDataSource.initialize();
-    console.log('✅ Database connection established successfully');
-    console.log(`📊 Database: ${AppDataSource.options.database || 'postgres'}`);
+    console.log('Database connection established successfully');
+    console.log(`Database: ${AppDataSource.options.database || 'postgres'}`);
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error('ERROR: Database connection failed:', error);
     throw error;
   }
 }

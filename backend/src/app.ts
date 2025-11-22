@@ -127,9 +127,9 @@ class App {
       // Initialize database
       await initializeDatabase();
 
-      logger.info('✅ Application initialized successfully');
+      logger.info('Application initialized successfully');
     } catch (error) {
-      logger.error('❌ Application initialization failed:', error);
+      logger.error('ERROR: Application initialization failed:', error);
       throw error;
     }
   }

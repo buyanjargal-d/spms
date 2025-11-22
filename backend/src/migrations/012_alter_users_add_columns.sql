@@ -127,10 +127,10 @@ DECLARE
     user_count INTEGER;
 BEGIN
     SELECT COUNT(*) INTO user_count FROM users;
-    RAISE NOTICE '✅ Migration 012 completed successfully';
-    RAISE NOTICE '📊 Added security and preference columns to % users', user_count;
-    RAISE NOTICE '🔒 Account will auto-lock for 30 minutes after 5 failed login attempts';
-    RAISE NOTICE '🔧 Use record_login_attempt(user_id, success) function to track logins';
+    RAISE NOTICE 'Migration 012 completed successfully';
+    RAISE NOTICE 'Added security and preference columns to % users', user_count;
+    RAISE NOTICE 'SECURITY: Account will auto-lock for 30 minutes after 5 failed login attempts';
+    RAISE NOTICE 'Use record_login_attempt(user_id, success) function to track logins';
 END $$;
 
 -- ============================================

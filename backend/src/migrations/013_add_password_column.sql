@@ -16,6 +16,6 @@ COMMENT ON COLUMN users.password IS 'Hashed password for local testing (fallback
 -- Success message
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 013 completed successfully';
+    RAISE NOTICE 'Migration 013 completed successfully';
     RAISE NOTICE '🔐 Added password column for local testing fallback';
 END $$;

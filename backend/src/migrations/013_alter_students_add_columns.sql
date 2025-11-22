@@ -49,9 +49,9 @@ DECLARE
     student_count INTEGER;
 BEGIN
     SELECT COUNT(*) INTO student_count FROM students;
-    RAISE NOTICE '✅ Migration 013 completed successfully';
-    RAISE NOTICE '📊 Added emergency phone and pickup notes columns to % students', student_count;
-    RAISE NOTICE 'ℹ️  These fields are optional but recommended for safety';
+    RAISE NOTICE 'Migration 013 completed successfully';
+    RAISE NOTICE 'Added emergency phone and pickup notes columns to % students', student_count;
+    RAISE NOTICE 'INFO: These fields are optional but recommended for safety';
 END $$;
 
 -- ============================================

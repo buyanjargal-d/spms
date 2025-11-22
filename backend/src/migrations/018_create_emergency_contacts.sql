@@ -165,14 +165,14 @@ COMMENT ON COLUMN emergency_contacts.is_active IS 'Whether this contact is still
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 018 completed successfully';
-    RAISE NOTICE '📊 Created emergency_contacts table (OPTIONAL feature)';
-    RAISE NOTICE '🔧 Created functions:';
+    RAISE NOTICE 'Migration 018 completed successfully';
+    RAISE NOTICE 'Created emergency_contacts table (OPTIONAL feature)';
+    RAISE NOTICE 'Created functions:';
     RAISE NOTICE '   - get_student_emergency_contacts(student_id)';
     RAISE NOTICE '   - search_emergency_contact_by_phone(phone)';
-    RAISE NOTICE 'ℹ️  Parents can add additional emergency contacts';
-    RAISE NOTICE 'ℹ️  Contacts prioritized for emergency situations';
-    RAISE NOTICE 'ℹ️  Example: Grandparents, aunts/uncles, family friends';
+    RAISE NOTICE 'INFO: Parents can add additional emergency contacts';
+    RAISE NOTICE 'INFO: Contacts prioritized for emergency situations';
+    RAISE NOTICE 'INFO: Example: Grandparents, aunts/uncles, family friends';
 END $$;
 
 -- ============================================

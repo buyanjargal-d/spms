@@ -88,9 +88,9 @@ DECLARE
     setting_count INTEGER;
 BEGIN
     SELECT COUNT(*) INTO setting_count FROM school_settings;
-    RAISE NOTICE '✅ Migration 010 completed successfully';
-    RAISE NOTICE '📊 Created school_settings table with % default settings', setting_count;
-    RAISE NOTICE 'ℹ️  Admin can now configure school parameters without code changes';
+    RAISE NOTICE 'Migration 010 completed successfully';
+    RAISE NOTICE 'Created school_settings table with % default settings', setting_count;
+    RAISE NOTICE 'INFO: Admin can now configure school parameters without code changes';
 END $$;
 
 -- ============================================

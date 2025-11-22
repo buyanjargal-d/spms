@@ -100,8 +100,8 @@ COMMENT ON COLUMN notifications.read_at IS 'When the notification was marked as 
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 008 completed successfully';
-    RAISE NOTICE '📊 Created notifications table with indexes and triggers';
+    RAISE NOTICE 'Migration 008 completed successfully';
+    RAISE NOTICE 'Created notifications table with indexes and triggers';
 END $$;
 
 -- ============================================

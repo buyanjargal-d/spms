@@ -14,16 +14,16 @@ async function seedDatabase() {
 
   try {
     await client.connect();
-    console.log('✅ Connected to database');
+    console.log('Connected to database');
 
     // Check if data exists
     const checkAdmin = await client.query("SELECT * FROM users WHERE dan_id = 'admin001'");
     if (checkAdmin.rows.length > 0) {
-      console.log('⚠️  Demo data already exists!');
+      console.log('WARNING: Demo data already exists!');
       return;
     }
 
-    console.log('🌱 Seeding demo data...\n');
+    console.log('Seeding demo data...\n');
 
     // Hash password
     const hashedPassword = await bcrypt.hash('123456', 10);
@@ -35,7 +35,7 @@ async function seedDatabase() {
       VALUES ('admin001', 'Админ Систем', 'admin@spms.mn', '99001122', 'admin', $1, true, NOW(), NOW())
       RETURNING id
     `, [hashedPassword]);
-    console.log('✅ Admin created: admin001 / password: 123456');
+    console.log('Admin created: admin001 / password: 123456');
 
     // 2. Create Teachers
     console.log('\nCreating teachers...');
@@ -50,7 +50,7 @@ async function seedDatabase() {
       VALUES ('teacher002', 'Сарангэрэл Ган', 'sarangerel@spms.mn', '99223344', 'teacher', $1, true, NOW(), NOW())
       RETURNING id
     `, [hashedPassword]);
-    console.log('✅ Teachers created: teacher001, teacher002 / password: 123456');
+    console.log('Teachers created: teacher001, teacher002 / password: 123456');
 
     // 3. Create Classes
     console.log('\nCreating classes...');
@@ -65,7 +65,7 @@ async function seedDatabase() {
       VALUES ('2-Б анги', 2, $1, '2024-2025', '2024-2025', '202', 30, true, NOW(), NOW())
       RETURNING id
     `, [teacher2.rows[0].id]);
-    console.log('✅ Classes created: 1-А анги, 2-Б анги');
+    console.log('Classes created: 1-А анги, 2-Б анги');
 
     // 4. Create Parents
     console.log('\nCreating parents...');
@@ -80,7 +80,7 @@ async function seedDatabase() {
       VALUES ('parent002', 'Цэцэг Ган', 'tsetseg@gmail.com', '88222222', 'parent', $1, true, NOW(), NOW())
       RETURNING id
     `, [hashedPassword]);
-    console.log('✅ Parents created: parent001, parent002 / password: 123456');
+    console.log('Parents created: parent001, parent002 / password: 123456');
 
     // 5. Create Students
     console.log('\nCreating students...');
@@ -101,7 +101,7 @@ async function seedDatabase() {
       VALUES ('STU003', 'stu003', 'Энхжин', 'Болд', '2017-11-08', 'male', $1, '2024-09-01', true, NOW(), NOW())
       RETURNING id
     `, [class1.rows[0].id]);
-    console.log('✅ Students created: STU001, STU002, STU003');
+    console.log('Students created: STU001, STU002, STU003');
 
     // 6. Create Student-Guardian relationships
     console.log('\nCreating student-guardian relationships...');
@@ -119,7 +119,7 @@ async function seedDatabase() {
       INSERT INTO student_guardians (student_id, guardian_id, relationship, is_primary, is_authorized_pickup, created_at, updated_at)
       VALUES ($1, $2, 'parent', true, true, NOW(), NOW())
     `, [student3.rows[0].id, parent1.rows[0].id]);
-    console.log('✅ Guardian relationships created');
+    console.log('Guardian relationships created');
 
     // 7. Create Guards
     console.log('\nCreating security guards...');
@@ -127,7 +127,7 @@ async function seedDatabase() {
       INSERT INTO users (dan_id, full_name, email, phone, role, password, is_active, created_at, updated_at)
       VALUES ('guard001', 'Даваа Баяр', 'davaa@spms.mn', '99887766', 'guard', $1, true, NOW(), NOW())
     `, [hashedPassword]);
-    console.log('✅ Guard created: guard001 / password: 123456');
+    console.log('Guard created: guard001 / password: 123456');
 
     // 8. Create some pickup requests
     console.log('\nCreating pickup requests...');
@@ -145,10 +145,10 @@ async function seedDatabase() {
       INSERT INTO pickup_requests (student_id, guardian_id, request_type, status, scheduled_time, notes, created_at, updated_at)
       VALUES ($1, $2, 'regular', 'approved', NOW() + INTERVAL '3 hours', 'Regular pickup', NOW(), NOW())
     `, [student3.rows[0].id, parent1.rows[0].id]);
-    console.log('✅ Pickup requests created');
+    console.log('Pickup requests created');
 
     console.log('\n' + '='.repeat(50));
-    console.log('✅ Demo data seeding completed successfully!');
+    console.log('Demo data seeding completed successfully!');
     console.log('='.repeat(50));
     console.log('\nDemo Credentials (all passwords: 123456):\n');
     console.log('Admin:    admin001 / 123456');
@@ -158,7 +158,7 @@ async function seedDatabase() {
     console.log('\n' + '='.repeat(50));
 
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    console.error('ERROR: Error seeding database:', error);
     throw error;
   } finally {
     await client.end();
@@ -168,10 +168,10 @@ async function seedDatabase() {
 // Run the seeding
 seedDatabase()
   .then(() => {
-    console.log('\n✅ All done!');
+    console.log('\nAll done!');
     process.exit(0);
   })
   .catch(err => {
-    console.error('\n❌ Seeding failed:', err.message);
+    console.error('\nERROR: Seeding failed:', err.message);
     process.exit(1);
   });

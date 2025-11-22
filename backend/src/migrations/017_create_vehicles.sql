@@ -168,14 +168,14 @@ COMMENT ON COLUMN vehicles.notes IS 'Additional notes about the vehicle';
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 017 completed successfully';
-    RAISE NOTICE '📊 Created vehicles table (OPTIONAL feature)';
-    RAISE NOTICE '🔧 Created functions:';
+    RAISE NOTICE 'Migration 017 completed successfully';
+    RAISE NOTICE 'Created vehicles table (OPTIONAL feature)';
+    RAISE NOTICE 'Created functions:';
     RAISE NOTICE '   - search_vehicle_by_plate(license_plate)';
     RAISE NOTICE '   - get_user_vehicles(user_id)';
-    RAISE NOTICE 'ℹ️  Parents can OPTIONALLY register their vehicles';
-    RAISE NOTICE 'ℹ️  Guards can search by license plate for quick verification';
-    RAISE NOTICE 'ℹ️  Example: Guard sees plate "ABC-123", searches, finds parent info';
+    RAISE NOTICE 'INFO: Parents can OPTIONALLY register their vehicles';
+    RAISE NOTICE 'INFO: Guards can search by license plate for quick verification';
+    RAISE NOTICE 'INFO: Example: Guard sees plate "ABC-123", searches, finds parent info';
 END $$;
 
 -- ============================================

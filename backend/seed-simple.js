@@ -11,7 +11,7 @@ async function seed() {
 
   try {
     await client.connect();
-    console.log('✅ Connected');
+    console.log('Connected');
 
     // Use pre-hashed password for '123456' with bcrypt rounds=10
     // Generated with: bcrypt.hash('123456', 10)
@@ -65,7 +65,7 @@ async function seed() {
       ON CONFLICT (dan_id) DO NOTHING
     `, [hashedPassword]);
 
-    console.log('✅ Users created');
+    console.log('Users created');
 
     // Class
     const classRes = await client.query(`
@@ -85,7 +85,7 @@ async function seed() {
       }
     }
 
-    console.log('✅ Class created');
+    console.log('Class created');
 
     if (classId) {
       // Students
@@ -103,7 +103,7 @@ async function seed() {
         RETURNING id
       `, [classId]);
 
-      console.log('✅ Students created');
+      console.log('Students created');
 
       if (st1.rows.length > 0 && st2.rows.length > 0) {
         // Guardian relationships
@@ -119,7 +119,7 @@ async function seed() {
           ON CONFLICT DO NOTHING
         `, [st2.rows[0].id, parentId]);
 
-        console.log('✅ Guardians linked');
+        console.log('Guardians linked');
 
         // Pickup requests
         await client.query(`
@@ -129,11 +129,11 @@ async function seed() {
           ($3, $4, 'early', 'approved', NOW() + INTERVAL '1 hour', 'Doctor appointment', NOW(), NOW())
         `, [st1.rows[0].id, parentId, st2.rows[0].id, parentId]);
 
-        console.log('✅ Pickup requests created');
+        console.log('Pickup requests created');
       }
     }
 
-    console.log('\n✅ DONE! Login: admin001 / Password: 123456\n');
+    console.log('\nDONE! Login: admin001 / Password: 123456\n');
 
   } catch (err) {
     console.error('Error:', err.message);

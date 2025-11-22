@@ -5,7 +5,7 @@
 
 set -e  # Exit on error
 
-echo "🚀 SPMS Database Setup"
+echo "SPMS Database Setup"
 echo "====================="
 echo ""
 
@@ -17,19 +17,19 @@ BACKEND_DIR="$SCRIPT_DIR/.."
 # Load environment variables
 if [ -f "$BACKEND_DIR/.env" ]; then
     export $(cat "$BACKEND_DIR/.env" | grep -v '^#' | xargs)
-    echo "✅ Environment variables loaded"
+    echo "Environment variables loaded"
 else
-    echo "❌ .env file not found in $BACKEND_DIR"
+    echo "ERROR: .env file not found in $BACKEND_DIR"
     exit 1
 fi
 
 # Check if DATABASE_URL is set
 if [ -z "$DATABASE_URL" ]; then
-    echo "❌ DATABASE_URL not set in .env file"
+    echo "ERROR: DATABASE_URL not set in .env file"
     exit 1
 fi
 
-echo "📊 Database: $(echo $DATABASE_URL | sed 's/:[^:@]*@/:****@/')"
+echo "Database: $(echo $DATABASE_URL | sed 's/:[^:@]*@/:****@/')"
 echo ""
 
 # Function to run SQL migration
@@ -37,15 +37,15 @@ run_migration() {
     local migration_file=$1
     local migration_name=$(basename "$migration_file")
 
-    echo "🔧 Running migration: $migration_name"
+    echo "Running migration: $migration_name"
 
     PGPASSWORD=$(echo $DATABASE_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p') \
     psql "$DATABASE_URL" -f "$migration_file" -v ON_ERROR_STOP=1
 
     if [ $? -eq 0 ]; then
-        echo "✅ Migration $migration_name completed"
+        echo "Migration $migration_name completed"
     else
-        echo "❌ Migration $migration_name failed"
+        echo "ERROR: Migration $migration_name failed"
         exit 1
     fi
     echo ""
@@ -63,7 +63,7 @@ read -p "Enter choice (1-4): " choice
 case $choice in
     1)
         echo ""
-        echo "📦 Running all migrations..."
+        echo "Running all migrations..."
         echo ""
 
         # Run migrations in order
@@ -75,12 +75,12 @@ case $choice in
         run_migration "$MIGRATIONS_DIR/006_add_indexes.sql"
         run_migration "$MIGRATIONS_DIR/007_add_updated_at_triggers.sql"
 
-        echo "✅ All migrations completed successfully!"
+        echo "All migrations completed successfully!"
         ;;
 
     2)
         echo ""
-        echo "📦 Running all migrations..."
+        echo "Running all migrations..."
         echo ""
 
         # Run migrations in order
@@ -92,9 +92,9 @@ case $choice in
         run_migration "$MIGRATIONS_DIR/006_add_indexes.sql"
         run_migration "$MIGRATIONS_DIR/007_add_updated_at_triggers.sql"
 
-        echo "✅ All migrations completed!"
+        echo "All migrations completed!"
         echo ""
-        echo "🌱 Seeding test data..."
+        echo "Seeding test data..."
         echo ""
 
         cd "$BACKEND_DIR"
@@ -106,7 +106,7 @@ case $choice in
 
     3)
         echo ""
-        echo "🌱 Seeding test data..."
+        echo "Seeding test data..."
         echo ""
 
         cd "$BACKEND_DIR"
@@ -126,7 +126,7 @@ case $choice in
         migration_file=$(ls -1 "$MIGRATIONS_DIR"/*.sql | sed -n "${migration_num}p")
 
         if [ -z "$migration_file" ]; then
-            echo "❌ Invalid migration number"
+            echo "ERROR: Invalid migration number"
             exit 1
         fi
 
@@ -134,10 +134,10 @@ case $choice in
         ;;
 
     *)
-        echo "❌ Invalid choice"
+        echo "ERROR: Invalid choice"
         exit 1
         ;;
 esac
 
 echo ""
-echo "🎉 Done!"
+echo "Done!"

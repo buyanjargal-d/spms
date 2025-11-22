@@ -98,7 +98,7 @@ export function validateEnv(): void {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
-  console.log('✅ Environment variables validated');
+  console.log('Environment variables validated');
 }
 
 export default ENV;

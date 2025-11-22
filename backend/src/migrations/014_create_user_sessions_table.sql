@@ -52,6 +52,6 @@ COMMENT ON COLUMN user_sessions.revoke_reason IS 'Reason for session revocation 
 -- Success message
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 014 completed successfully';
-    RAISE NOTICE '📱 Created user_sessions table for multi-device tracking';
+    RAISE NOTICE 'Migration 014 completed successfully';
+    RAISE NOTICE 'Created user_sessions table for multi-device tracking';
 END $$;

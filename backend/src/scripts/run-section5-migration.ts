@@ -2,11 +2,11 @@ import { AppDataSource } from '../config/database';
 
 async function runMigration() {
   try {
-    console.log('🔧 Connecting to database...');
+    console.log('Connecting to database...');
     await AppDataSource.initialize();
-    console.log('✅ Connected to database');
+    console.log('Connected to database');
 
-    console.log('🔧 Running Section 5 (Guard Functionality) migration...');
+    console.log('Running Section 5 (Guard Functionality) migration...');
     await AppDataSource.query(`
       -- Add QR code fields to pickup_requests
       ALTER TABLE pickup_requests
@@ -64,15 +64,15 @@ async function runMigration() {
       CREATE INDEX IF NOT EXISTS idx_pickup_requests_admin_review ON pickup_requests(requires_admin_review) WHERE requires_admin_review = TRUE;
     `);
 
-    console.log('✅ Migration completed successfully');
-    console.log('📱 Added Section 5 fields to pickup_requests table');
+    console.log('Migration completed successfully');
+    console.log('Added Section 5 fields to pickup_requests table');
     console.log('🔒 Created security_alerts table');
-    console.log('📊 Created performance indexes');
+    console.log('Created performance indexes');
 
     await AppDataSource.destroy();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error running migration:', error);
+    console.error('ERROR: Error running migration:', error);
     await AppDataSource.destroy();
     process.exit(1);
   }

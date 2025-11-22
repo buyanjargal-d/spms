@@ -80,22 +80,21 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-100 via-primary-200 to-primary-300 px-4 py-8">
       <div className="w-full max-w-2xl">
-        {/* Logo and title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-600 text-white text-2xl font-bold mb-4">
-            S
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary-500 text-white shadow-lg mb-4">
+            <GraduationCap className="w-12 h-12" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">SPMS</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-4xl font-bold text-primary-900 mb-2">SPMS</h1>
+          <p className="text-primary-800 text-lg">
             Сурагч авах удирдлагын систем
           </p>
         </div>
 
-        {/* Login form */}
-        <div className="bg-white rounded-xl shadow-xl p-6 sm:p-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border-2 border-primary-200">
+          <h2 className="text-2xl font-semibold text-primary mb-6 flex items-center gap-2">
+            <LogIn className="w-6 h-6" />
             Нэвтрэх
           </h2>
 
@@ -111,8 +110,8 @@ const LoginPage = () => {
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Үүрэг <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-secondary mb-3">
+                Үүрэг <span className="text-danger-500">*</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {roles.map((role) => (
@@ -136,9 +135,9 @@ const LoginPage = () => {
                 name="rememberMe"
                 checked={formData.rememberMe}
                 onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary-500 focus:ring-primary-500 border-primary-300 rounded"
               />
-              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+              <label htmlFor="rememberMe" className="ml-2 block text-sm text-secondary">
                 Намайг санах (30 хоног)
               </label>
             </div>
@@ -146,21 +145,20 @@ const LoginPage = () => {
             <Button
               type="submit"
               variant="primary"
-              className="w-full"
+              className="w-full text-lg py-3"
               loading={loading}
             >
-              <LogIn className="w-5 h-5 mr-2" />
+              {!loading && <LogIn className="w-5 h-5 mr-2" />}
               Нэвтрэх
             </Button>
           </form>
 
-          {/* Demo credentials - only show in development */}
           {process.env.NODE_ENV === 'development' && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm font-medium text-blue-900 mb-2">
+            <div className="mt-6 p-4 bg-primary-50 rounded-lg border-2 border-primary-300">
+              <p className="text-sm font-medium text-primary-900 mb-2">
                 Туршилтын нэвтрэх мэдээлэл:
               </p>
-              <div className="text-xs text-blue-700 space-y-1">
+              <div className="text-xs text-primary-800 space-y-1">
                 <p>• Админ: admin001</p>
                 <p>• Багш: teacher001</p>
                 <p>• Эцэг эх: parent001</p>
@@ -170,8 +168,7 @@ const LoginPage = () => {
           )}
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-primary-900 mt-6 font-medium">
           Бакалаврын судалгааны ажил - Д.Буянжаргал
         </p>
       </div>

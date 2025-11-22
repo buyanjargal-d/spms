@@ -90,10 +90,10 @@ COMMENT ON COLUMN attendance.marked_by_user_id IS 'Teacher/admin who marked atte
 
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Migration 009 completed successfully';
-    RAISE NOTICE '📊 Created attendance table with unique constraint and indexes';
-    RAISE NOTICE 'ℹ️  Default behavior: If no record exists, assume student is present';
-    RAISE NOTICE 'ℹ️  Teachers should mark students as absent to prevent pickup';
+    RAISE NOTICE 'Migration 009 completed successfully';
+    RAISE NOTICE 'Created attendance table with unique constraint and indexes';
+    RAISE NOTICE 'INFO: Default behavior: If no record exists, assume student is present';
+    RAISE NOTICE 'INFO: Teachers should mark students as absent to prevent pickup';
 END $$;
 
 -- ============================================
