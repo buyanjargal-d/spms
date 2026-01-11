@@ -29,7 +29,7 @@ ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 # Stage 2: Production with nginx
-FROM nginx:1.25-alpine
+FROM nginx:1.29.4-alpine
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
